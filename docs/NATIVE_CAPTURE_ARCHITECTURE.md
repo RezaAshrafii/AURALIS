@@ -1,3 +1,5 @@
+> v0.10.5 note: derived analysis now parses WAVEFORMATEXTENSIBLE by exact Windows offsets and exposes decode telemetry.
+
 # Auralis v0.10.3 — Capture-first Segment/ASR Validation Architecture
 
 ```text

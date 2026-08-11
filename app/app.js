@@ -5,6 +5,9 @@ const store = new Store({
   token: '', version: '', sessionId: null, mode: 'study', health: null,
   turns: [], transcripts: [], answer: null, selectedTurnId: null, sources: [], metrics: null, native: null, asr: null, busyCommit: false
 });
+const renderCache = { health: '', turns: '', transcripts: '' };
+const uiPerf = { sessionStartMs: null, captureStartAt: 0, captureStartMs: null };
+const stableJson = value => { try { return JSON.stringify(value); } catch { return String(Date.now()); } };
 
 async function api(path, options = {}) {
   const headers = new Headers(options.headers || {});
@@ -30,9 +33,12 @@ function clsState(value) {
 }
 
 function renderHealth(h) {
+  if (!h) return;
+  const sig = stableJson({status:h.status,components:h.components,version:h.version});
+  if (renderCache.health === sig) return;
+  renderCache.health = sig;
   const grid = $('healthGrid');
   grid.innerHTML = '';
-  if (!h) return;
   for (const [key, value] of Object.entries(h.components || {})) {
     const item = document.createElement('div');
     item.className = 'health-item';
@@ -49,6 +55,9 @@ function renderHealth(h) {
 function renderTurns(turns) {
   const box = $('turns');
   const selectedId = store.get().selectedTurnId;
+  const sig = stableJson({selectedId,turns:(turns||[]).map(t=>[t.id,t.kind,t.text_raw,t.answer_id,t.answer_text,t.state])});
+  if (renderCache.turns === sig) return;
+  renderCache.turns = sig;
   box.innerHTML = '';
   if (!turns?.length) {
     box.innerHTML = '<div class="empty">هنوز Turn ثبت نشده.</div>';
@@ -175,6 +184,9 @@ function transcriptStateClass(item) {
 }
 
 function renderTranscripts(items = []) {
+  const sig = stableJson({asr:store.get().asr?.lastState,items:(items||[]).map(x=>[x.segment_id,x.segment_state,x.asr_status,x.revision,x.text_raw,x.asr_error])});
+  if (renderCache.transcripts === sig) { store.set({ transcripts: items }); return; }
+  renderCache.transcripts = sig;
   store.set({ transcripts: items });
   const feed = $('liveTranscriptFeed');
   feed.innerHTML = '';
@@ -244,17 +256,28 @@ function renderNative(data) {
   $('nativeState').textContent = data.state || 'READY';
   $('nativeState').className = `badge ${['FAILED'].includes(data.state) ? 'bad' : ['CAPTURING','STARTING','STOPPING'].includes(data.state) ? 'warn' : 'neutral'}`;
   const hb = data.lastHeartbeatAt ? new Date(data.lastHeartbeatAt).toLocaleTimeString('fa-IR') : '—';
-  $('nativeSummary').textContent = `chunks ${data.chunks || 0} · ${fmtBytes(data.bytes)} · gaps ${data.gaps || 0} · queue ${data.queueDepth || 0}/${data.queueCapacity || 0} · heartbeat ${hb}${data.lastError ? ` · ${data.lastError}` : ''}`;
+  if (data.state === 'CAPTURING' && uiPerf.captureStartAt && uiPerf.captureStartMs == null) {
+    uiPerf.captureStartMs = Math.round(performance.now() - uiPerf.captureStartAt);
+    uiPerf.captureStartAt = 0;
+  }
+  const perfText = `${uiPerf.sessionStartMs != null ? ` · session-start ${uiPerf.sessionStartMs}ms` : ''}${uiPerf.captureStartMs != null ? ` · capture-start ${uiPerf.captureStartMs}ms` : ''}`;
+  $('nativeSummary').textContent = `chunks ${data.chunks || 0} · ${fmtBytes(data.bytes)} · gaps ${data.gaps || 0} · queue ${data.queueDepth || 0}/${data.queueCapacity || 0} · heartbeat ${hb}${perfText}${data.lastError ? ` · ${data.lastError}` : ''}`;
   const box = $('nativeChannels'); box.innerHTML = '';
   const channels = Object.entries(data.channels || {});
+  const analysis = data.analysis || {};
+  const micA = analysis['user-mic'];
+  const sysA = analysis['system-loopback'];
+  const fmtAnalysis = (id, x) => x ? `${id}: ${x.encoding || '—'} · RMS ${Number(x.rms||0).toFixed(4)} / thr ${Number(x.threshold||0).toFixed(4)} · voice ${x.voice ? 'YES' : 'no'} · ${x.state || 'ACTIVE'}` : `${id}: no analysis yet`;
+  $('audioAnalysisSummary').textContent = `Audio analysis · ${fmtAnalysis('Mic', micA)} | ${fmtAnalysis('System', sysA)}`;
   if (!channels.length) { box.innerHTML = '<div class="empty">هنوز channel فعال نشده.</div>'; return; }
   for (const [id, ch] of channels) {
     const el = document.createElement('div'); el.className='native-channel';
     const rate = ch.sample_rate || ch.sampleRate || 0, count = ch.channels || 0, seq = ch.lastSequence || 0;
+    const an = analysis[id] || {};
     el.innerHTML='<strong></strong><span class="state"></span><div class="mono"></div>';
     el.querySelector('strong').textContent=id;
     el.querySelector('.state').textContent=ch.state || '—';
-    el.querySelector('.mono').textContent=`${rate} Hz · ${count} ch · seq ${seq}`;
+    el.querySelector('.mono').textContent=`${rate} Hz · ${count} ch · ${ch.encoding || an.encoding || 'encoding ?'} · seq ${seq}${an.rms != null ? ` · RMS ${Number(an.rms).toFixed(4)}` : ''}`;
     box.appendChild(el);
   }
 }
@@ -264,9 +287,16 @@ async function refreshNative() {
 }
 
 async function startNative() {
+  uiPerf.captureStartAt = performance.now();
+  uiPerf.captureStartMs = null;
+  $('nativeState').textContent = 'STARTING';
+  $('nativeState').className = 'badge warn';
+  $('nativeSummary').textContent = 'در حال راه‌اندازی WASAPI… UI نباید قفل شود.';
+  await new Promise(requestAnimationFrame);
   const sessionId = await ensureSession();
   const data = await api('/v1/native-capture/start', { method:'POST', body:JSON.stringify({ sessionId, mic:$('captureMic').checked, loopback:$('captureLoopback').checked, chunkSeconds:Number($('chunkSeconds').value) }) });
   renderNative(data);
+  setTimeout(refreshNative, 120);
   setTimeout(refreshNative, 500);
 }
 
@@ -494,7 +524,12 @@ function bind() {
     };
   });
 
-  $('startSession').onclick = async () => { if (!store.get().sessionId) await ensureSession(); };
+  $('startSession').onclick = async () => {
+    if (store.get().sessionId) return;
+    const b=$('startSession'); b.disabled=true; const old=b.textContent; b.textContent='در حال شروع…';
+    await new Promise(requestAnimationFrame);
+    try { const t0=performance.now(); await ensureSession(); uiPerf.sessionStartMs=Math.round(performance.now()-t0); } finally { b.disabled=false; b.textContent=old; }
+  };
   $('stopSession').onclick = async () => {
     const id = store.get().sessionId;
     if (!id) return;
@@ -591,7 +626,7 @@ function bind() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `auralis-v0104-live-transcript-diagnostics-${Date.now()}.json`;
+    link.download = `auralis-v0105-audio-path-diagnostics-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -602,12 +637,25 @@ function bind() {
   store.set({ token: bootstrap.token, version: bootstrap.version });
   bind();
   updateAsrProviderFields();
-  await runRouterTests();
-  await Promise.all([refreshHealth(), refreshSources(), refreshMetrics(), refreshNative(), refreshAsr(), refreshTranscripts()]);
-  setInterval(async () => {
-    const state = store.get().native?.state;
-    if (['STARTING','CAPTURING','STOPPING'].includes(state)) { await refreshNative(); await refreshHealth(); }
-    if (store.get().sessionId) { await refreshTranscripts(); await refreshTurns({ autoSelectNewest: true }); }
-    if (store.get().asr?.enabled) await refreshAsr();
-  }, 1000);
+  // First paint only needs critical runtime state. Heavy source/metrics/router work is deferred.
+  await Promise.all([refreshHealth(), refreshNative(), refreshAsr()]);
+  const defer = window.requestIdleCallback ? cb => requestIdleCallback(cb, {timeout:1200}) : cb => setTimeout(cb, 50);
+  defer(() => { runRouterTests().catch(()=>{}); refreshSources().catch(()=>{}); refreshMetrics().catch(()=>{}); refreshTranscripts().catch(()=>{}); });
+
+  let pollBusy = false;
+  const poll = async () => {
+    if (!pollBusy && document.visibilityState === 'visible') {
+      pollBusy = true;
+      try {
+        const state = store.get().native?.state;
+        const tasks = [];
+        if (['STARTING','CAPTURING','STOPPING'].includes(state)) tasks.push(refreshNative(), refreshHealth());
+        if (store.get().sessionId) tasks.push(refreshTranscripts(), refreshTurns({ autoSelectNewest: true }));
+        if (store.get().asr?.enabled) tasks.push(refreshAsr());
+        await Promise.allSettled(tasks);
+      } finally { pollBusy = false; }
+    }
+    setTimeout(poll, 900);
+  };
+  setTimeout(poll, 250);
 })();

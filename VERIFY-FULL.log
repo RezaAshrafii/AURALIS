@@ -1,206 +1,220 @@
-Auralis v0.10.4 Verification Log
-UTC: 2026-08-11
+Auralis v0.10.5 Full Verification
+UTC 2026-08-11T20:24:39Z
 
-== JavaScript syntax ==
-server.mjs PASS
-app/app.js PASS
-app/store.js PASS
-core/persian-router.mjs PASS
-core/answer-schema.mjs PASS
+=== VERSION ===
+0.10.5-audio-path-hardening.1
+{"version":"0.10.5-audio-path-hardening.1","releaseClass":"AUDIO_PATH_HARDENING_VALIDATION"}
 
-== Unit/contract tests ==
+=== NODE SYNTAX ===
+NODE_SYNTAX_PASS
+
+=== NODE TESTS ===
 TAP version 13
 # Subtest: Persian router accepts all required question/request regressions
 ok 1 - Persian router accepts all required question/request regressions
   ---
-  duration_ms: 2.018474
+  duration_ms: 1.908941
   type: 'test'
   ...
 # Subtest: Persian router does not answer ordinary statements
 ok 2 - Persian router does not answer ordinary statements
   ---
-  duration_ms: 0.139748
+  duration_ms: 0.143965
   type: 'test'
   ...
 # Subtest: answer parser accepts direct JSON and filters citations
 ok 3 - answer parser accepts direct JSON and filters citations
   ---
-  duration_ms: 0.768053
+  duration_ms: 0.768303
   type: 'test'
   ...
 # Subtest: answer parser unwraps fenced JSON
 ok 4 - answer parser unwraps fenced JSON
   ---
-  duration_ms: 0.212536
+  duration_ms: 0.207599
   type: 'test'
   ...
 # Subtest: answer parser unwraps nested JSON answer envelope
 ok 5 - answer parser unwraps nested JSON answer envelope
   ---
-  duration_ms: 0.183403
+  duration_ms: 0.165126
   type: 'test'
   ...
 # Subtest: answer parser rejects malformed provider payload instead of leaking it
 ok 6 - answer parser rejects malformed provider payload instead of leaking it
   ---
-  duration_ms: 0.440636
+  duration_ms: 0.475117
   type: 'test'
   ...
 # Subtest: source grounding without an allowed citation is marked unverified
 ok 7 - source grounding without an allowed citation is marked unverified
   ---
-  duration_ms: 0.111196
+  duration_ms: 0.116523
   type: 'test'
   ...
 # Subtest: server exposes native capture start/stop/status and persistent chunk ledger
 ok 8 - server exposes native capture start/stop/status and persistent chunk ledger
   ---
-  duration_ms: 0.832339
+  duration_ms: 0.6047
   type: 'test'
   ...
 # Subtest: validation probe uses WASAPI event callback and loopback rather than browser audio
 ok 9 - validation probe uses WASAPI event callback and loopback rather than browser audio
   ---
-  duration_ms: 0.229251
+  duration_ms: 0.191846
   type: 'test'
   ...
 # Subtest: capture queue is bounded and overflow becomes explicit gap event
 ok 10 - capture queue is bounded and overflow becomes explicit gap event
   ---
-  duration_ms: 0.287258
+  duration_ms: 0.19481
   type: 'test'
   ...
 # Subtest: raw capture preserves all interleaved channels
 ok 11 - raw capture preserves all interleaved channels
   ---
-  duration_ms: 0.171645
+  duration_ms: 0.115872
   type: 'test'
   ...
 # Subtest: spool is append-only and chunk close records sha256 and sequence range
 ok 12 - spool is append-only and chunk close records sha256 and sequence range
   ---
-  duration_ms: 0.236772
+  duration_ms: 0.146608
   type: 'test'
   ...
 # Subtest: server replays native ledger and recovers unclosed raw chunks after restart
 ok 13 - server replays native ledger and recovers unclosed raw chunks after restart
   ---
-  duration_ms: 0.234008
+  duration_ms: 0.131546
   type: 'test'
   ...
 # Subtest: target Rust ledger schema enforces non-empty sequence range
 ok 14 - target Rust ledger schema enforces non-empty sequence range
   ---
-  duration_ms: 0.244654
+  duration_ms: 0.149252
   type: 'test'
   ...
 # Subtest: immutable speech segments and transcript revisions are persisted
 ok 15 - immutable speech segments and transcript revisions are persisted
   ---
-  duration_ms: 0.995742
+  duration_ms: 0.756095
   type: 'test'
   ...
 # Subtest: ASR has a production-target Google STT adapter and an explicit experimental Gemini adapter
 ok 16 - ASR has a production-target Google STT adapter and an explicit experimental Gemini adapter
   ---
-  duration_ms: 0.239667
+  duration_ms: 0.18141
   type: 'test'
   ...
 # Subtest: raw capture path stays independent from derived VAD analysis
 ok 17 - raw capture path stays independent from derived VAD analysis
   ---
-  duration_ms: 0.262721
+  duration_ms: 0.191725
   type: 'test'
   ...
 # Subtest: loopback silent device-position advances are not automatically mislabeled as loss
 ok 18 - loopback silent device-position advances are not automatically mislabeled as loss
   ---
-  duration_ms: 0.106298
+  duration_ms: 0.119498
   type: 'test'
   ...
 # Subtest: derived VAD emits frozen segment IDs and band-limited derived WAV
 ok 19 - derived VAD emits frozen segment IDs and band-limited derived WAV
   ---
-  duration_ms: 0.098106
+  duration_ms: 0.095102
   type: 'test'
   ...
 # Subtest: turn cards are selectable and include both question and answer preview
 ok 20 - turn cards are selectable and include both question and answer preview
   ---
-  duration_ms: 0.204023
+  duration_ms: 0.115652
   type: 'test'
   ...
 # Subtest: turn detail endpoint binds audio segment transcript and answers to exact turn
 ok 21 - turn detail endpoint binds audio segment transcript and answers to exact turn
   ---
-  duration_ms: 0.167549
+  duration_ms: 0.143684
   type: 'test'
   ...
 # Subtest: ASR and Brain credentials remain RAM runtime settings, not localStorage
 ok 22 - ASR and Brain credentials remain RAM runtime settings, not localStorage
   ---
-  duration_ms: 0.105066
+  duration_ms: 0.672751
   type: 'test'
   ...
-# Subtest: v0.10.4 exposes a visible live transcript feed independent from turn cards
-ok 23 - v0.10.4 exposes a visible live transcript feed independent from turn cards
+# Subtest: v0.10.5 exposes a visible live transcript feed independent from turn cards
+ok 23 - v0.10.5 exposes a visible live transcript feed independent from turn cards
   ---
-  duration_ms: 0.251794
+  duration_ms: 0.272346
   type: 'test'
   ...
 # Subtest: quick runtime setup activates experimental audio transcription plus text brain with one RAM-only key
 ok 24 - quick runtime setup activates experimental audio transcription plus text brain with one RAM-only key
   ---
-  duration_ms: 0.429089
+  duration_ms: 0.298484
   type: 'test'
   ...
 # Subtest: enabling ASR queues previously frozen untranscribed segments instead of losing them
 ok 25 - enabling ASR queues previously frozen untranscribed segments instead of losing them
   ---
-  duration_ms: 0.158005
+  duration_ms: 0.14815
   type: 'test'
   ...
 # Subtest: validation VAD exposes level telemetry and softer speech thresholds for user testing
 ok 26 - validation VAD exposes level telemetry and softer speech thresholds for user testing
   ---
-  duration_ms: 0.723697
+  duration_ms: 0.076695
   type: 'test'
   ...
-1..26
-# tests 26
+# Subtest: WAVEFORMATEXTENSIBLE parser uses Windows byte offsets instead of Go struct extension layout
+ok 27 - WAVEFORMATEXTENSIBLE parser uses Windows byte offsets instead of Go struct extension layout
+  ---
+  duration_ms: 0.057786
+  type: 'test'
+  ...
+# Subtest: UI polling is non-overlapping and completed ledger recovery is skipped to reduce lag
+ok 28 - UI polling is non-overlapping and completed ledger recovery is skipped to reduce lag
+  ---
+  duration_ms: 0.074821
+  type: 'test'
+  ...
+# Subtest: native status exposes encoding and VAD level telemetry
+ok 29 - native status exposes encoding and VAD level telemetry
+  ---
+  duration_ms: 0.061381
+  type: 'test'
+  ...
+1..29
+# tests 29
 # suites 0
-# pass 26
+# pass 29
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 68.13675
+# duration_ms 56.303476
 
-== Windows native validation builds ==
-auralis-capture-probe.exe build PASS
-auralis-spool-inspect.exe build PASS
+=== GO TESTS ===
+ok  	auralis/native-probe	(cached)
+?   	auralis/native-probe/cmd/spool-inspect	[no test files]
 
-== Static UI/security/contracts ==
-DOM IDs=78 refs=74 missing=0
-NO_LOCALSTORAGE_SECRET_PATH PASS
-NO_BROWSER_SPEECH_PRIMARY PASS
-NATIVE_NO_GETUSERMEDIA PASS
-LIVE_TRANSCRIPT_ENDPOINT PASS
-QUICK_RUNTIME_SETUP PASS
-PENDING_SEGMENT_REPLAY PASS
-TURN_DETAIL_BINDING PASS
-LIVE_TRANSCRIPT_UI PASS
+=== WINDOWS CROSS BUILD ===
+/mnt/data/build_v0105/Auralis_v0.10.5_Audio_Path_Hardening_Source/native/auralis-capture-probe.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections
+/mnt/data/build_v0105/Auralis_v0.10.5_Audio_Path_Hardening_Source/native/auralis-spool-inspect.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections
+/mnt/data/build_v0105/Auralis_v0.10.5_Audio_Path_Hardening_Windows_x64_Portable/runtime/bun.exe:    PE32+ executable for MS Windows 6.00 (console), x86-64, 11 sections
 
-== PE architecture ==
-/mnt/data/build_v0104/Auralis_v0.10.4_Live_Transcript_Validation_Source/native/auralis-capture-probe.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections
-/mnt/data/build_v0104/Auralis_v0.10.4_Live_Transcript_Validation_Source/native/auralis-spool-inspect.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections
+=== DOM / SECRET / CONTRACT CHECK ===
+DOM IDs 79 refs 75 missing []
+DOM_SECRET_CONTRACT_PASS
 
-== Go vet advisory (non-gating) ==
-# auralis/native-probe
-# [auralis/native-probe]
-./main.go:151:20: possible misuse of unsafe.Pointer
-./main.go:152:20: possible misuse of unsafe.Pointer
-./main.go:220:25: possible misuse of unsafe.Pointer
-./main.go:402:40: possible misuse of unsafe.Pointer
-./vad.go:36:34: possible misuse of unsafe.Pointer
-go vet exit=1 (unsafe.Pointer COM boundary advisory; not treated as validation-build gate)
+=== SOURCE↔PORTABLE INTERSECTION ===
+shared 47 mismatches []
+
+=== HASHES ===
+2ca982c4b76a91e12a7ccd6bbc61f69238028ae7fd61dbe46ad2a6617efe3be4  /mnt/data/build_v0105/Auralis_v0.10.5_Audio_Path_Hardening_Source/native/auralis-capture-probe.exe
+3393a69cc6ea3f56f40dd14e05e62513139f07af87a73dfcee3152524a80fbd9  /mnt/data/build_v0105/Auralis_v0.10.5_Audio_Path_Hardening_Source/native/auralis-spool-inspect.exe
+
+=== LIMITATIONS ===
+Real Windows mic->segment->ASR was NOT executable in this Linux build environment.
+Rust production core was NOT built because cargo/rustc are unavailable.
+20/60/120-minute Windows release gates are NOT claimed.

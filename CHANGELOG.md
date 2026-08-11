@@ -1,24 +1,28 @@
-# Auralis v0.10.4 — Live Transcript Validation
+# Auralis v0.10.5 — Audio Path Hardening Validation
 
-## Added
-- Visible **Live Transcript** feed in Session view.
-- Segment states are visible before a Turn exists: FROZEN, RUNNING, FINAL, FAILED/EMPTY.
-- One-click **Audio→Text + Brain** runtime setup using one Gemini API key kept in RAM only.
-- Enabling ASR automatically queues already-frozen, untranscribed segments instead of losing them.
-- Turn cards are selectable and expand their own full answer when selected.
-- Exact question/answer binding remains per Turn ID.
-- Transcript timeline endpoint: `/v1/sessions/{id}/transcripts`.
-- Lower validation VAD thresholds for quiet Persian speech and `vad.level` telemetry.
+## Fixed
+- Fixed WAVEFORMATEXTENSIBLE parsing by using Windows byte offsets (18/20/24) instead of Go struct extension alignment.
+- Added valid-bits and channel-mask awareness to the derived audio path.
+- Added right-channel-safe downmix and regression tests.
+- Added explicit `capture.format_unsupported` and `vad.decode_failed` telemetry instead of silent VAD starvation.
+- Added live RMS / threshold / voice / encoding telemetry in the Session UI.
+- Fixed disabled capture-source health so an unchecked System Loopback is not shown as STARTING/CAPTURING by default.
+
+## Responsiveness
+- Replaced overlapping 1-second polling with a non-overlapping scheduler.
+- Avoids rebuilding Health / Turns / Transcript DOM when data has not changed.
+- Defers router/source/metrics initialization until after first paint.
+- Skips replaying completed historical audio ledgers at each application launch.
+- Prewarms the native capture probe in the background on Windows.
+- Session-start and capture-start latency are now measured and shown in the Native summary.
 
 ## Preserved
-- Capture-first: raw WASAPI audio is spooled before VAD/ASR.
-- Immutable frozen segment IDs.
-- Persistent SQLite ledger and explicit gap records.
-- Server-side Persian router.
-- Text-only Brain; audio is not sent to the answer-generation Brain path.
-- FTS5 source grounding and citation allowlist.
+- Capture-first raw WASAPI spool before VAD/ASR.
+- Persistent SQLite ledger and explicit gaps.
+- Immutable segment IDs and transcript revisions.
+- Visible Live Transcript.
+- Selectable Turn cards with their own question and answer.
+- Server-side Persian Router, FTS5 retrieval, strict answer schema and citation allowlist.
 
-## Not claimed
-- This is not the final Rust production core.
-- Gemini Audio is an experimental segment-final transcription adapter for testability, not the production transcript source of truth.
-- Neural VAD, gRPC streaming partials, whisper.cpp worker and 120-minute release gate remain pending.
+## Release honesty
+This is a Windows validation build, not a claim of a flawless or final v0.10 release. The production requirements in the v0.10 implementation prompt still require the Rust core, neural VAD, dedicated streaming ASR partial/stable-prefix path, local worker/replay validation, and 20/60/120-minute Windows release gates.

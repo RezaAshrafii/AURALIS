@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Auralis v0.10.4 Live Transcript Validation</title>
+  <title>Auralis v0.10.5 Audio Path Hardening</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div id="app">
     <header class="topbar">
-      <div class="brand"><span class="dot"></span><strong>Auralis</strong><span class="ver">v0.10.4 transcript</span></div>
+      <div class="brand"><span class="dot"></span><strong>Auralis</strong><span class="ver">v0.10.5 audio</span></div>
       <div class="statusline"><span id="globalStatus" class="badge warn">DEGRADED</span><span id="sessionBadge" class="muted">بدون جلسه</span></div>
     </header>
     <nav class="tabs">
@@ -60,6 +60,7 @@
               </div>
               <div class="row"><button id="startNativeCapture">شروع ضبط Native</button><button id="stopNativeCapture" class="ghost">توقف ضبط</button></div>
               <div id="nativeSummary" class="native-summary">Session را شروع کن، سپس Capture را بزن.</div>
+              <div id="audioAnalysisSummary" class="native-summary analysis-summary">Audio analysis: منتظر Capture…</div>
               <div id="nativeChannels" class="native-channels"></div>
             </div>
             <div class="warning-box"><strong>Capture-first حفظ شده است.</strong><br>Raw audio همیشه قبل از VAD/ASR در spool می‌ماند. این build یک VAD تطبیقی و ASR نهاییِ segment-based برای Validation اضافه می‌کند؛ Neural VAD و gRPC Streaming ASR production هنوز در Rust core نهایی می‌شوند.</div>
@@ -152,7 +153,7 @@
       </section>
     </main>
 
-    <footer class="footer"><span>Live Transcript Validation Build — WASAPI + persistent audio + immutable segments + visible final transcript + selectable Q/A Turn cards; Rust neural VAD/gRPC partial streaming pending</span><span id="versionHandshake">version handshake...</span></footer>
+    <footer class="footer"><span>Audio Path Hardening Build — fixed WAVEFORMATEXTENSIBLE decode + lower UI polling overhead + persistent audio + visible final transcript; Rust neural VAD/gRPC partial streaming pending</span><span id="versionHandshake">version handshake...</span></footer>
   </div>
   <script type="module" src="/app.js"></script>
 </body>

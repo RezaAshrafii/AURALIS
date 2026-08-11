@@ -1,7 +1,5 @@
-# Rust production core status — v0.10.4 validation build
+# Rust production core status — v0.10.5 validation build
 
-The target architecture remains Rust stable + windows-rs + Tokio/Axum + SQLite WAL, as required by the v0.10 implementation prompt.
+The production architecture still targets Rust stable + windows-rs. This execution environment does not contain cargo/rustc, so no Rust production binary is claimed.
 
-This artifact host still does not contain `rustc`/`cargo`. The Windows-runnable validation package therefore continues to use the Go WASAPI probe for native capture, persistent spool and immutable segment generation. The probe is not presented as the final production `auralis-core.exe`.
-
-v0.10.4 adds a visible final-transcript feed, persistent ASR job/revision state, pending-segment replay, and exact Turn question/answer cards. The remaining production migration is neural VAD + dedicated streaming ASR partial/stable-prefix + local whisper worker inside the target Rust architecture.
+The bundled Windows validation probe is cross-built from audited Go source to make real WASAPI capture, format decoding, VAD segmentation and ASR integration testable now. v0.10.5 fixes the Windows WAVEFORMATEXTENSIBLE alignment failure discovered in real user testing.

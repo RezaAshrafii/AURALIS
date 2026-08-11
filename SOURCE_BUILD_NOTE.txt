@@ -1,7 +1,10 @@
-Auralis v0.10.4 source snapshot
+Auralis v0.10.5 source snapshot
 
-- The package contains the Go source for the Windows WASAPI validation probe and the compiled validation executables used by the matching Portable artifact.
-- runtime/bun.exe is not included in the Source snapshot; it is bundled only in the Portable artifact.
-- Validation probes can be rebuilt with scripts/build-validation-probes.ps1 when Go is installed.
-- The target production Rust core remains under native/core and is not claimed as compiled here because rustc/cargo are unavailable on the artifact host.
-- Use the Windows Portable package for immediate audio-to-text testing.
+Primary delta over v0.10.4:
+- byte-accurate WAVEFORMATEXTENSIBLE parser
+- cross-platform Go unit tests for audio format detection/downmix
+- VAD decode-failure and live level telemetry
+- reduced UI polling/render work and completed-ledger startup replay
+- background native-probe prewarm
+
+The Windows validation probe is cross-built from native-probe with Go 1.23 in this build environment. The final v0.10 production requirement remains a Rust stable/windows-rs core; that claim is intentionally not made here.

@@ -13,12 +13,12 @@ const DATA = join(ROOT, 'data');
 await mkdir(DATA, { recursive: true });
 
 const HOST = '127.0.0.1';
-const PORT = 47826;
+const PORT = 47827;
 const ORIGIN = `http://${HOST}:${PORT}`;
 const TOKEN = randomBytes(32).toString('hex');
-const VERSION = '0.10.4-live-transcript-validation.1';
+const VERSION = '0.10.5-audio-path-hardening.1';
 const SCHEMA_VERSION = 5;
-const DB_PATH = join(DATA, 'auralis-v0104-ledger.sqlite');
+const DB_PATH = join(DATA, 'auralis-v0105-ledger.sqlite');
 const NATIVE_PROBE = join(ROOT, 'native', 'auralis-capture-probe.exe');
 const AUDIO_ROOT = join(DATA, 'audio');
 await mkdir(AUDIO_ROOT, { recursive: true });
@@ -342,6 +342,8 @@ let nativeCapture = {
   queueCapacity: 0,
   stopFile: null,
   channels: {},
+  analysis: {},
+  requested: { mic: false, loopback: false },
   lastError: null
 };
 
@@ -473,6 +475,19 @@ function ingestNativeEvent(ev, replay = false) {
       .run(`${sid}:${cid}`, sid, cid, 'FAILED', message, occurredAt);
     return;
   }
+  if (ev.type === 'vad.level' && sid && cid) {
+    nativeCapture.analysis[cid] = { ...(nativeCapture.analysis[cid] || {}), ...payload, updatedAt: occurredAt, state: 'ACTIVE' };
+    return;
+  }
+  if ((ev.type === 'vad.decode_failed' || ev.type === 'capture.format_unsupported') && sid && cid) {
+    nativeCapture.analysis[cid] = { ...(nativeCapture.analysis[cid] || {}), ...payload, updatedAt: occurredAt, state: 'DECODE_FAILED', error: ev.type };
+    nativeCapture.lastError = `${cid}: ${ev.type} (${String(payload.encoding || 'unknown')})`;
+    return;
+  }
+  if (ev.type === 'vad.speech_started' && sid && cid) {
+    nativeCapture.analysis[cid] = { ...(nativeCapture.analysis[cid] || {}), ...payload, updatedAt: occurredAt, state: 'SPEECH' };
+    return;
+  }
   if (ev.type === 'audio.chunk_closed' && sid && cid) {
     const id = `${sid}:${cid}:${String(payload.chunk_id || `${payload.seq_start}-${payload.seq_end}`)}`;
     db.query(`INSERT OR IGNORE INTO audio_chunks(id,session_id,channel_id,seq_start,seq_end,qpc_start_100ns,qpc_end_100ns,sample_rate,channels,block_align,format_tag,bits_per_sample,path,byte_length,sha256,discontinuity,created_at)
@@ -509,7 +524,12 @@ async function recoverNativeLedgers() {
     if (!d.isDirectory()) continue;
     const sid = d.name;
     const sessionDir = join(AUDIO_ROOT, sid);
-    if (!db.query('SELECT id FROM sessions WHERE id=?').get(sid)) {
+    const existingSession = db.query('SELECT id,state FROM sessions WHERE id=?').get(sid);
+    const latestRun = existingSession ? db.query('SELECT state FROM native_capture_runs WHERE session_id=? ORDER BY started_at DESC LIMIT 1').get(sid) : null;
+    // Completed capture runs are already durable in SQLite. Replaying every historical
+    // JSONL ledger at every launch made startup progressively slower as sessions grew.
+    if (existingSession && latestRun?.state === 'STOPPED') continue;
+    if (!existingSession) {
       db.query('INSERT INTO sessions VALUES(?,?,?,?,?)').run(sid, now(), null, 'recovered', 'RECOVERABLE');
     }
     const ledger = join(sessionDir, 'native-ledger.jsonl');
@@ -572,7 +592,7 @@ async function startNativeCapture(sessionId, opts = {}) {
   try { await unlink(stopFile); } catch {}
   const args = ['--session', sessionId, '--output', outDir, '--chunk-seconds', String(Math.max(2,Math.min(10,Number(opts.chunkSeconds)||5))), '--mic', String(opts.mic !== false), '--loopback', String(opts.loopback !== false), '--stop-file', stopFile];
   const proc = spawn(NATIVE_PROBE, args, { cwd: ROOT, windowsHide:true, stdio:['ignore','pipe','pipe'] });
-  nativeCapture = { proc, runId, sessionId, state:'STARTING', startedAt:now(), stoppedAt:null, lastHeartbeatAt:null, queueDepth:0, queueCapacity:0, stopFile, channels:{}, lastError:null };
+  nativeCapture = { proc, runId, sessionId, state:'STARTING', startedAt:now(), stoppedAt:null, lastHeartbeatAt:null, queueDepth:0, queueCapacity:0, stopFile, channels:{}, analysis:{}, requested:{ mic: opts.mic !== false, loopback: opts.loopback !== false }, lastError:null };
   db.query('INSERT INTO native_capture_runs(id,session_id,pid,state,started_at,probe_engine) VALUES(?,?,?,?,?,?)')
     .run(runId, sessionId, proc.pid || 0, 'STARTING', nativeCapture.startedAt, 'WASAPI validation probe');
   db.query('UPDATE sessions SET state=? WHERE id=?').run('CAPTURING_NATIVE_VALIDATION', sessionId);
@@ -636,7 +656,7 @@ function nativeStatus() {
     runId:nativeCapture.runId, sessionId:sid, state:nativeCapture.state,
     startedAt:nativeCapture.startedAt, stoppedAt:nativeCapture.stoppedAt, lastHeartbeatAt:nativeCapture.lastHeartbeatAt,
     queueDepth:nativeCapture.queueDepth, queueCapacity:nativeCapture.queueCapacity,
-    channels:nativeCapture.channels, lastError:nativeCapture.lastError,
+    channels:nativeCapture.channels, analysis:nativeCapture.analysis, requested:nativeCapture.requested, lastError:nativeCapture.lastError,
     chunks:Number(chunks?.n||0), bytes:Number(chunks?.bytes||0), gaps:Number(gaps||0),
     implementation:'WASAPI validation probe', targetArchitecture:'Rust auralis-core.exe (not yet compiled in this environment)'
   };
@@ -646,20 +666,21 @@ function health() {
   const probeReady = nativeCapture.state !== 'UNAVAILABLE';
   const mic = nativeCapture.channels['user-mic'];
   const sys = nativeCapture.channels['system-loopback'];
-  const captureState = ch => ch?.state || (nativeCapture.proc ? 'STARTING' : 'READY');
+  const captureState = (ch, requested) => requested === false ? 'DISABLED' : (ch?.state || (nativeCapture.proc ? 'STARTING' : 'READY'));
+  const analysisState = cid => nativeCapture.analysis?.[cid]?.state === 'DECODE_FAILED' ? 'FAILED' : (nativeCapture.proc ? 'VALIDATION_ACTIVE' : 'VALIDATION_READY');
   return {
     product: 'Auralis',
     version: VERSION,
-    releaseClass: 'LIVE_TRANSCRIPT_VALIDATION',
+    releaseClass: 'AUDIO_PATH_HARDENING_VALIDATION',
     status: nativeCapture.state === 'FAILED' || asrRuntime.lastState === 'ASR_PROVIDER_ERROR' ? 'degraded' : 'degraded',
-    reason: 'segment-final-transcript-is-testable; production-rust-core-neural-vad-and-grpc-streaming-partials-still-pending',
+    reason: 'pcm-format-path-hardened; segment-final-transcript-testable; production-rust-core-neural-vad-and-grpc-streaming-partials-still-pending',
     schemaVersion: SCHEMA_VERSION,
     components: {
-      captureMic: { state: captureState(mic), critical: true, engine: 'WASAPI event-driven validation probe' },
-      captureSystem: { state: captureState(sys), critical: true, engine: 'WASAPI loopback validation probe' },
+      captureMic: { state: captureState(mic, nativeCapture.requested?.mic), critical: true, engine: 'WASAPI event-driven validation probe' },
+      captureSystem: { state: captureState(sys, nativeCapture.requested?.loopback), critical: true, engine: 'WASAPI loopback validation probe' },
       spoolWriter: { state: nativeCapture.proc ? 'CAPTURING' : 'READY', critical: true, engine: 'append-only raw chunks' },
       audioLedger: { state: 'HEALTHY', critical: true, engine: 'SQLite WAL + probe JSONL recovery journal' },
-      vad: { state: nativeCapture.proc ? 'VALIDATION_ACTIVE' : 'VALIDATION_READY', critical: false, engine: 'adaptive RMS validation; neural VAD pending' },
+      vad: { state: analysisState('user-mic'), critical: false, engine: 'adaptive RMS validation; verified PCM decoder; neural VAD pending' },
       asrPrimary: { state: asrRuntime.enabled ? (asrRuntime.lastState || 'READY') : 'NOT_CONFIGURED', critical: true, engine: asrRuntime.provider },
       asrLocal: { state: 'NOT_CONFIGURED', critical: false },
       router: { state: 'HEALTHY', critical: true, engine: 'server-side Unicode-safe' },
@@ -670,7 +691,7 @@ function health() {
     capabilities: [
       'native-wasapi-mic-validation', 'native-wasapi-loopback-validation', 'simultaneous-mic-loopback',
       'sequence-and-qpc-metadata', 'append-only-raw-audio-spool', 'explicit-gap-recording', 'crash-ledger-replay',
-      'derived-speech-segments','immutable-segment-ids','live-transcript-panel','final-segment-transcription','pending-segment-replay','google-stt-v2-recognize-adapter','gemini-audio-experimental-adapter',
+      'waveformatextensible-byte-accurate-parser','right-channel-safe-downmix','vad-level-telemetry','derived-speech-segments','immutable-segment-ids','live-transcript-panel','final-segment-transcription','pending-segment-replay','google-stt-v2-recognize-adapter','gemini-audio-experimental-adapter',
       'server-side-auto-router','strict-answer-schema','answer-turn-binding','answer-idempotency','selectable-turn-cards','turn-question-answer-view','turn-detail-api',
       'retrieval-evidence-excerpts','sqlite-wal-ledger','fts5-single-source-index','turn-isolation','citation-allowlist-validation','component-health-ui','diagnostics-export'
     ],
@@ -705,7 +726,7 @@ async function callBrain({ question, apiKey, model, strictSource = true, correla
     ? 'This is STRICT SOURCE MODE. Use only the retrieved evidence for factual claims. If the evidence does not support the requested fact, explicitly say the source does not contain enough information and set grounding to insufficient.'
     : 'Use retrieved evidence when relevant; general knowledge is allowed when evidence is insufficient.';
 
-  const system = `You are Auralis v0.10.4 Text-only Brain. Answer ONLY the current question. ${sourcePolicy}\nNever answer previous questions again. Never invent source IDs. Return exactly one JSON object with this schema: {"answer":"string","sourceChunkIds":["chunk-id"],"grounding":"source|mixed|general|insufficient"}. No Markdown fence and no extra text.`;
+  const system = `You are Auralis v0.10.5 Text-only Brain. Answer ONLY the current question. ${sourcePolicy}\nNever answer previous questions again. Never invent source IDs. Return exactly one JSON object with this schema: {"answer":"string","sourceChunkIds":["chunk-id"],"grounding":"source|mixed|general|insufficient"}. No Markdown fence and no extra text.`;
   const user = `CURRENT QUESTION:\n${normalizeFa(question)}\n\nRETRIEVED EVIDENCE:\n${evidence || 'NONE'}`;
 
   let upstream;
@@ -919,6 +940,15 @@ async function staticFile(pathname) {
   try { return { body: await readFile(p), ext: extname(p) }; } catch { return null; }
 }
 
+
+function warmNativeProbe() {
+  if (process.platform !== 'win32') return;
+  try {
+    const child = spawn(NATIVE_PROBE, ['--help'], { cwd: ROOT, windowsHide:true, stdio:'ignore' });
+    child.on('error', () => {});
+  } catch {}
+}
+
 function openBrowser() {
   if (process.platform !== 'win32' || process.env.AURALIS_NO_OPEN === '1') return;
   try {
@@ -953,7 +983,7 @@ const server = Bun.serve({
 
     if (u.pathname === '/v1/bootstrap' && req.method === 'GET') {
       if (!sameOrigin(req)) return json({ error: 'ORIGIN_REJECTED' }, 403);
-      return json({ token: TOKEN, version: VERSION, schemaVersion: SCHEMA_VERSION, releaseClass: 'LIVE_TRANSCRIPT_VALIDATION' });
+      return json({ token: TOKEN, version: VERSION, schemaVersion: SCHEMA_VERSION, releaseClass: 'AUDIO_PATH_HARDENING_VALIDATION' });
     }
     if (u.pathname === '/v1/health' && req.method === 'GET') return json(health());
     if (u.pathname === '/v1/metrics/summary' && req.method === 'GET') {
@@ -972,7 +1002,7 @@ const server = Bun.serve({
         transcripts: db.query('SELECT COUNT(*) n FROM transcript_revisions').get().n,
         asrJobs: db.query('SELECT COUNT(*) n FROM asr_jobs').get().n
       };
-      return json({ version: VERSION, ...counts, dbPath: 'data/auralis-v0104-ledger.sqlite', native: nativeStatus(), asr: redactedAsrStatus(), brainRuntime: redactedBrainRuntime(), warning: 'WASAPI + live final transcript validation are active. Production target remains Rust + neural VAD + gRPC streaming partial/final ASR.' });
+      return json({ version: VERSION, ...counts, dbPath: 'data/auralis-v0105-ledger.sqlite', native: nativeStatus(), asr: redactedAsrStatus(), brainRuntime: redactedBrainRuntime(), warning: 'WASAPI + corrected WAVEFORMATEXTENSIBLE decode + live final transcript validation are active. Production target remains Rust + neural VAD + gRPC streaming partial/final ASR.' });
     }
 
     if (u.pathname === '/v1/native-capture/status' && req.method === 'GET') return json(nativeStatus());
@@ -1249,7 +1279,7 @@ const server = Bun.serve({
         recentFailures,
         secretsIncluded: false,
         audioIncluded: false,
-        note: 'Diagnostics exclude secrets and raw audio. WASAPI + live segment-final transcript validation are testable; production Rust neural VAD + gRPC streaming partial/final release gates remain pending.'
+        note: 'Diagnostics exclude secrets and raw audio. WAVEFORMATEXTENSIBLE decode is hardened; WASAPI + live segment-final transcript validation are testable; production Rust neural VAD + gRPC streaming partial/final release gates remain pending.'
       });
     }
 
@@ -1274,5 +1304,6 @@ const server = Bun.serve({
   }
 });
 
-setTimeout(openBrowser, 250);
+setTimeout(openBrowser, 180);
+setTimeout(warmNativeProbe, 450);
 console.log(`Auralis ${VERSION} at ${ORIGIN}`);

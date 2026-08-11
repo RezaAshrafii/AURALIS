@@ -7,6 +7,7 @@ const app = await readFile(new URL('../app/app.js', import.meta.url), 'utf8');
 const html = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
 const go = await readFile(new URL('../native-probe/main.go', import.meta.url), 'utf8');
 const vad = await readFile(new URL('../native-probe/vad.go', import.meta.url), 'utf8');
+const audioFormat = await readFile(new URL('../native-probe/audio_format.go', import.meta.url), 'utf8');
 
 test('immutable speech segments and transcript revisions are persisted', () => {
   for (const needle of ['CREATE TABLE IF NOT EXISTS speech_segments','CREATE TABLE IF NOT EXISTS transcript_revisions','CREATE TABLE IF NOT EXISTS asr_jobs','CREATE TABLE IF NOT EXISTS turn_segments']) {
@@ -69,7 +70,7 @@ test('ASR and Brain credentials remain RAM runtime settings, not localStorage', 
 });
 
 
-test('v0.10.4 exposes a visible live transcript feed independent from turn cards', () => {
+test('v0.10.5 exposes a visible live transcript feed independent from turn cards', () => {
   assert.ok(server.includes('/transcripts'));
   assert.ok(server.includes('transcriptTimeline'));
   assert.ok(app.includes('refreshTranscripts'));
@@ -94,4 +95,27 @@ test('validation VAD exposes level telemetry and softer speech thresholds for us
   assert.ok(vad.includes('vad.level'));
   assert.ok(vad.includes('minThreshold := 0.0055'));
   assert.ok(vad.includes('st.candidateMs >= 100'));
+});
+
+
+test('WAVEFORMATEXTENSIBLE parser uses Windows byte offsets instead of Go struct extension layout', () => {
+  assert.ok(audioFormat.includes('raw[18:20]'));
+  assert.ok(audioFormat.includes('raw[20:24]'));
+  assert.ok(audioFormat.includes('raw[24:28]'));
+  assert.ok(audioFormat.includes('Go struct-alignment corruption'));
+  assert.ok(!vad.includes('waveFormatExtensible struct'));
+});
+
+test('UI polling is non-overlapping and completed ledger recovery is skipped to reduce lag', () => {
+  assert.ok(app.includes('let pollBusy = false'));
+  assert.ok(app.includes('Promise.allSettled(tasks)'));
+  assert.ok(!app.includes('setInterval(async () =>'));
+  assert.ok(server.includes("latestRun?.state === 'STOPPED'"));
+});
+
+test('native status exposes encoding and VAD level telemetry', () => {
+  assert.ok(server.includes("ev.type === 'vad.level'"));
+  assert.ok(server.includes('analysis:nativeCapture.analysis'));
+  assert.ok(app.includes('audioAnalysisSummary'));
+  assert.ok(app.includes('RMS'));
 });

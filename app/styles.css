@@ -29,7 +29,7 @@
 @media(max-width:760px){.form-grid2{grid-template-columns:1fr}.turn-detail-meta{grid-template-columns:1fr 1fr}}
 
 
-/* v0.10.4 live transcript validation */
+/* v0.10.5 audio path hardening */
 .live-transcript-box{border:1px solid #2a3850;background:#0a111a;border-radius:12px;padding:9px;margin-bottom:9px;flex:0 0 auto}
 .live-transcript-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.live-transcript-head>div:first-child{display:flex;align-items:center;gap:8px}
 .muted-inline{font-size:9px;color:#65758a}.live-transcript-text{font-size:14px;line-height:1.8;min-height:30px;color:#e0e8f4;margin-top:7px;white-space:pre-wrap}
@@ -40,3 +40,5 @@
 .turn.expanded .turn-answer-preview{display:block;-webkit-line-clamp:unset;max-height:none;color:#d5deea}.turn.expanded .turn-text{color:#f1f5fb}.turn.expanded{padding:11px}
 .quick-runtime-box{display:grid;gap:6px;border:1px solid #2c4669;background:#0d1827;border-radius:12px;padding:10px;margin-bottom:10px}.quick-runtime-box strong{font-size:12px}.quick-runtime-box span{font-size:10px;color:#91a8c6;line-height:1.6}.quick-runtime-box button{justify-self:start}
 @media(max-height:780px){.live-transcript-feed{max-height:85px}.live-transcript-text{font-size:12px}.live-transcript-box{padding:7px}.turns-title-row{margin-bottom:3px}}
+
+.analysis-summary{white-space:normal;line-height:1.55;overflow-wrap:anywhere;min-height:1.4em}

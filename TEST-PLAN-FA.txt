@@ -1,86 +1,71 @@
-AURALIS v0.10.4 — LIVE TRANSCRIPT VALIDATION TEST PLAN
-======================================================
+AURALIS v0.10.5 — AUDIO PATH HARDENING TEST PLAN
+================================================
 
 هدف اصلی این نسخه:
-اثبات مسیر واقعی Mic -> WASAPI -> Spool -> Segment -> ASR -> Live Transcript -> Turn Card -> Answer.
+اثبات مسیر Mic -> PCM Decode -> VAD -> Segment -> ASR -> Live Transcript و بررسی کاهش لگ شروع Session/Capture.
 
 پیش‌نیاز:
-- ZIP را Extract کن و Auralis.vbs را اجرا کن.
-- در Brain، Gemini API Key را وارد کن.
-- دکمه «فعال‌سازی صوت→متن + Brain» را بزن.
-- وضعیت Live Transcript باید از ASR OFF به READY/HEALTHY تغییر کند.
+- برای تست اول فقط Mic روشن باشد.
+- System Loopback خاموش.
+- در Brain کلید Gemini را وارد و «فعال‌سازی صوت→متن + Brain» را بزن.
 
-TEST 1 — Mic -> Text
-1) Session را Start کن.
-2) Mic=ON ، System Loopback=OFF.
-3) Native Capture را Start کن.
-4) واضح بگو: «واریانس در مدل رگرسیون چیست؟»
-5) حدود 1 تا 2 ثانیه سکوت کن.
+TEST 1 — FORMAT / LEVEL
+Session و Native Capture را روشن کن و 5 ثانیه حرف بزن.
 PASS:
-- Live Transcript یک Segment نشان دهد.
-- وضعیت Segment از FROZEN/RUNNING به FINAL برسد.
-- متن نزدیک به جمله گفته‌شده باشد.
-- Turn Card مستقل ساخته شود.
-FAIL:
-- seq میکروفون بالا برود ولی هیچ Segment ساخته نشود.
-- Segment ساخته شود ولی ASR بدون error قابل مشاهده متوقف شود.
+- user-mic seq افزایش یابد.
+- Encoding باید یکی از float32/float64/pcm16/pcm24/pcm32 باشد.
+- هنگام حرف زدن RMS از threshold بالاتر رود و voice=YES دیده شود.
+FAIL BLOCKER:
+- DECODE_FAILED یا encoding ناشناخته.
+- seq بالا برود ولی RMS همیشه صفر باشد.
 
-TEST 2 — Three-turn isolation
-سه جمله را با حدود 1.5 ثانیه فاصله بگو:
-1. «واریانس چیست؟»
-2. «ضریب تعیین چیست؟»
-3. «رگرسیون از مبدأ چه زمانی مناسب است؟»
+TEST 2 — MIC TO TEXT
+بگو: «واریانس در مدل رگرسیون چیست؟» سپس 1 تا 2 ثانیه سکوت.
 PASS:
-- سه Segment/Turn جدا.
-- هیچ Turn شامل متن سؤال قبلی نباشد.
-- هر کارت سؤال خودش را نشان دهد.
+- Segment ساخته شود.
+- Live Transcript متن نهایی را نشان دهد.
+- Turn Card مستقل ایجاد شود.
 
-TEST 3 — Question + Answer per card
-منبع رگرسیون داخل test-data را Import کن. Strict Source روشن باشد.
-سه سؤال بالا را تکرار کن.
+TEST 3 — TURN SEPARATION
+با مکث حدود 1.5 ثانیه سه سؤال بگو:
+1) واریانس چیست؟
+2) ضریب تعیین چیست؟
+3) رگرسیون از مبدأ چه زمانی مناسب است؟
 PASS:
-- اگر Router سؤال را answerable تشخیص داد، همان کارت پاسخ خودش را دریافت کند.
-- با کلیک روی Turn 1 و Turn 3، Inspector سؤال/پاسخ همان Turn را نشان دهد.
-- پاسخ Turn جدید، Turn قدیمی را overwrite نکند.
+- 3 Segment مستقل.
+- 3 Transcript مستقل.
+- 3 Turn Card مستقل.
+- انتخاب هر کارت سؤال و پاسخ همان Turn را نشان دهد.
 
-TEST 4 — Statement silence
-بگو: «امروز درباره رگرسیون مطالعه کردم.»
+TEST 4 — SILENCE
+30 ثانیه سکوت.
 PASS:
-- Transcript ثبت شود.
-- Turn می‌تواند statement شود.
-- Brain پاسخ خودکار تولید نکند.
+- Turn خیالی ساخته نشود.
+- متن ساختگی ظاهر نشود.
 
-TEST 5 — ASR activation after capture
-1) ASR را خاموش کن.
-2) یک جمله بگو تا Segment frozen شود.
-3) دوباره «فعال‌سازی صوت→متن + Brain» را بزن.
-PASS:
-- pending segment خودکار queue شود.
-- متن آن بدون ضبط دوباره ظاهر شود.
+TEST 5 — STARTUP RESPONSIVENESS
+شروع Session و سپس شروع Native Capture را بزن.
+در summary دو عدد session-start و capture-start ثبت می‌شوند.
+این عددها را Screenshot بگیر. هدف این validation این است که UI قفل نشود و درخواست‌ها overlap نکنند؛ عدد نهایی release gate بعد از تست روی چند Windows تعیین می‌شود.
 
-TEST 6 — Quiet speech
-یک جمله را آرام ولی قابل شنیدن بگو.
-PASS اولیه:
-- Segment تشخیص داده شود و متن تولید شود.
-اگر نه، Diagnostics را نگه دار؛ threshold هنوز validation است.
-
-TEST 7 — System Loopback
-بعد از پاس Mic:
-Mic=OFF ، System Loopback=ON. یک فایل/ویدئوی فارسی پخش کن.
+TEST 6 — SYSTEM LOOPBACK
+پس از پاس شدن Mic:
+Mic OFF، System Loopback ON، یک صدای فارسی پخش کن.
 PASS:
 - system-loopback seq افزایش یابد.
-- Live Transcript متن system را نشان دهد.
-- Turn source_role=system باشد.
+- encoding/RMS قابل مشاهده باشد.
+- Transcript با source_role=system ساخته شود.
 
-TEST 8 — Gap observation
-قبل و بعد تست عدد gaps را ثبت کن.
-PASS معماری:
-- gap مخفی نباشد و reason در Diagnostics وجود داشته باشد.
-- queue overflow یا discontinuity به‌صورت explicit ثبت شود.
+TEST 7 — GAPS
+Diagnostics را بررسی کن.
+هر gap باید reason روشن داشته باشد. gap پنهان مجاز نیست.
 
-برای هر FAIL بفرست:
-- Screenshot Session
-- Screenshot Brain/ASR status
-- Diagnostics JSON
-- تعداد gaps
-- آخرین 8 ردیف Live Transcript
+TEST 8 — 20 MINUTE
+فقط اگر TEST 1 تا 7 پاس شد.
+20 دقیقه capture و گفتار دوره‌ای.
+PASS اولیه:
+- برنامه responsive بماند.
+- transcript/turn association خراب نشود.
+- memory یا queue بدون کنترل رشد نکند.
+
+فعلاً 60/120 دقیقه Release Gate نهایی محسوب می‌شوند و باید بعد از پایدار شدن این مسیر انجام شوند.
