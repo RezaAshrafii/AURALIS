@@ -1,0 +1,45 @@
+Auralis v0.10.4 Live Transcript Validation — Build Verification
+================================================================
+Build date (UTC): 2026-08-11
+Version: 0.10.4-live-transcript-validation.1
+Release class: LIVE_TRANSCRIPT_VALIDATION
+
+VERIFIED ON ARTIFACT HOST
+-------------------------
+PASS  JavaScript syntax: server.mjs, app/app.js, app/store.js, core modules
+PASS  Node unit/contract suite: 26 / 26
+PASS  DOM contract: 78 IDs, 74 app references, 0 missing
+PASS  No localStorage secret path
+PASS  No Browser SpeechRecognition primary path
+PASS  Native validation capture source uses WASAPI, not getUserMedia
+PASS  Windows cross-build: auralis-capture-probe.exe (PE32+ x86-64)
+PASS  Windows cross-build: auralis-spool-inspect.exe (PE32+ x86-64)
+PASS  Live Transcript endpoint/UI contract present
+PASS  Quick Audio→Text + Brain setup contract present
+PASS  Enabling ASR requeues frozen/untranscribed segments
+PASS  Selectable Turn cards bind exact question + answer + segment metadata
+PASS  Source/Portable shared-file equality check performed before packaging
+
+NON-GATING STATIC ADVISORY
+--------------------------
+`go vet` reports unsafe.Pointer diagnostics in the raw COM/WASAPI validation probe.
+Those calls are intentional low-level COM syscall boundaries, but this remains a review item and is one reason this validation probe is not presented as the final Rust production core.
+
+NOT EXECUTED / NOT CLAIMED ON ARTIFACT HOST
+--------------------------------------------
+- Real Windows microphone capture in v0.10.4
+- Real Windows system-loopback capture in v0.10.4
+- Real Gemini API audio transcription (no user API key available on artifact host)
+- Google Cloud STT StreamingRecognize
+- Neural Silero VAD
+- whisper.cpp local worker
+- Rust auralis-core.exe production build
+- 20 / 60 / 120 minute Windows soak tests
+- Numerical release gates for segmentation recall and transcript latency
+
+USER TEST GOAL FOR THIS BUILD
+-----------------------------
+The expected test path is:
+Mic -> Native WASAPI -> persistent raw spool -> frozen segment -> experimental segment-final ASR -> Live Transcript -> Auto Router -> selectable Turn card -> optional source-grounded Text Brain answer.
+
+A final transcript must be visible in the Session view independently from the Brain answer. If capture sequence grows but no Segment appears, investigate VAD. If a Segment appears but no text appears, the Live Transcript feed must show ASR state/error rather than silently losing the audio.

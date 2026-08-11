@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auralis v0.10.4 Live Transcript Validation</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><span class="dot"></span><strong>Auralis</strong><span class="ver">v0.10.4 transcript</span></div>
+      <div class="statusline"><span id="globalStatus" class="badge warn">DEGRADED</span><span id="sessionBadge" class="muted">بدون جلسه</span></div>
+    </header>
+    <nav class="tabs">
+      <button data-view="session" class="active">جلسه</button>
+      <button data-view="sources">منابع</button>
+      <button data-view="brain">Brain</button>
+      <button data-view="diagnostics">Diagnostics</button>
+    </nav>
+
+    <main class="view-wrap">
+      <section id="view-session" class="view active">
+        <div class="grid3 session-grid">
+          <section class="panel transcript-panel">
+            <div class="panel-head">
+              <h2>Timeline / Turns</h2>
+              <div class="actions"><span id="routeResult" class="route-chip">Auto Router</span><button id="startSession">شروع Session</button><button id="stopSession" class="ghost">پایان</button></div>
+            </div>
+            <div class="live-transcript-box">
+              <div class="live-transcript-head"><div><strong>Live Transcript</strong><span class="muted-inline">Audio → Segment → ASR → Text</span></div><div class="actions"><span id="liveAsrBadge" class="badge neutral">ASR OFF</span><button id="goAsrSetup" class="ghost small">تنظیم متن صدا</button></div></div>
+              <div id="liveTranscriptText" class="live-transcript-text">ASR خاموش است. ابتدا Runtime صوت→متن را فعال کن.</div>
+              <div id="liveTranscriptMeta" class="live-transcript-meta">Raw audio مستقل از ASR ذخیره می‌شود.</div>
+              <div id="liveTranscriptFeed" class="live-transcript-feed"><div class="empty compact-empty">هنوز Speech Segment نهایی نشده.</div></div>
+            </div>
+            <div class="turns-title-row"><strong>Turn Cards</strong><span>هر کارت پرسش و پاسخ خودش را دارد؛ برای جزئیات انتخابش کن.</span></div>
+            <div id="turns" class="turns"><div class="empty">هنوز Turn ثبت نشده.</div></div>
+            <div class="composer">
+              <textarea id="manualText" rows="2" placeholder="متن را وارد کن؛ Router سمت Core خودش question/request/statement را تعیین می‌کند..."></textarea>
+              <div class="composer-row two"><button id="commitTurn" class="ghost">فقط ثبت Turn</button><button id="askBrain">ثبت + پاسخ خودکار Brain</button></div>
+              <div class="composer-hint">Ctrl+Enter = ثبت + پاسخ · statement ثبت می‌شود ولی برای Brain ارسال نمی‌شود.</div>
+            </div>
+          </section>
+
+          <section class="panel answer-panel">
+            <div class="panel-head"><h2>Turn Inspector / Live Brain</h2><div class="actions"><button id="answerSelected" class="ghost small" disabled>پاسخ Turn انتخاب‌شده</button><span class="badge neutral">Text-only Brain</span></div></div>
+            <div id="answerBox" class="answer-box"><div class="empty">پاسخ اینجا نمایش داده می‌شود.</div></div>
+            <div id="evidenceBox" class="evidence"></div>
+          </section>
+
+          <section class="panel health-panel">
+            <div class="panel-head"><h2>Component Health</h2><button id="refreshHealth" class="ghost small">Refresh</button></div>
+            <div id="healthGrid" class="health-grid"></div>
+            <div class="native-capture-box">
+              <div class="native-head"><strong>Native Capture Validation</strong><span id="nativeState" class="badge neutral">READY</span></div>
+              <div class="native-options">
+                <label class="checkline"><input id="captureMic" type="checkbox" checked /> Mic</label>
+                <label class="checkline"><input id="captureLoopback" type="checkbox" checked /> System Loopback</label>
+                <label>Chunk<select id="chunkSeconds"><option value="5" selected>5s</option><option value="3">3s</option><option value="10">10s</option></select></label>
+              </div>
+              <div class="row"><button id="startNativeCapture">شروع ضبط Native</button><button id="stopNativeCapture" class="ghost">توقف ضبط</button></div>
+              <div id="nativeSummary" class="native-summary">Session را شروع کن، سپس Capture را بزن.</div>
+              <div id="nativeChannels" class="native-channels"></div>
+            </div>
+            <div class="warning-box"><strong>Capture-first حفظ شده است.</strong><br>Raw audio همیشه قبل از VAD/ASR در spool می‌ماند. این build یک VAD تطبیقی و ASR نهاییِ segment-based برای Validation اضافه می‌کند؛ Neural VAD و gRPC Streaming ASR production هنوز در Rust core نهایی می‌شوند.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-sources" class="view">
+        <div class="grid2">
+          <section class="panel">
+            <div class="panel-head"><h2>Source Ingest</h2><span class="badge neutral">Single pipeline / SQLite FTS5</span></div>
+            <label>عنوان<input id="sourceTitle" value="Controlled source" /></label>
+            <label>فایل TXT/MD<input id="sourceFile" type="file" accept=".txt,.md,.markdown,.csv,.json,.log,text/plain" /></label>
+            <label>یا متن<textarea id="sourceText" rows="14" placeholder="متن منبع را اینجا قرار بده..."></textarea></label>
+            <button id="importSource">Import + Index</button>
+            <div id="sourceImportStatus" class="mini-status"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Indexed Sources</h2><button id="refreshSources" class="ghost small">Refresh</button></div>
+            <div id="sourceList" class="source-list"></div>
+            <div class="retrieve-test"><input id="retrieveQuery" placeholder="تست retrieval..."/><button id="runRetrieve">Retrieve</button></div>
+            <div id="retrieveCards" class="retrieve-cards"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-brain" class="view">
+        <div class="grid2">
+          <section class="panel">
+            <div class="panel-head"><h2>Gemini Text Brain</h2><span class="badge neutral">Secrets فقط RAM</span></div>
+            <label>Model<input id="model" value="gemini-3.1-flash-lite" /></label>
+            <label>API Key<input id="apiKey" type="password" autocomplete="off" placeholder="AIza..." /></label>
+            <div class="quick-runtime-box">
+              <strong>راه‌اندازی سریع برای تست واقعی صدا</strong>
+              <span>همین Key فقط در RAM به ASR آزمایشی و Text Brain داده می‌شود؛ در localStorage ذخیره نمی‌شود.</span>
+              <button id="quickSetupRuntime">فعال‌سازی صوت→متن + Brain</button>
+              <div id="quickSetupStatus" class="mini-status">متن نهایی بعد از پایان هر Segment/مکث در Live Transcript ظاهر می‌شود؛ partial streaming واقعی هنوز release gate بعدی است.</div>
+            </div>
+            <label class="checkline"><input id="strictSource" type="checkbox" checked /> Strict Source Grounding</label>
+            <label class="checkline"><input id="autoBrain" type="checkbox" checked /> پاسخ خودکار به Turnهای صوتی پرسشی</label>
+            <div class="row"><button id="applyBrainRuntime">فعال‌سازی Brain Runtime</button><button id="testBrain">Test Brain</button><button id="clearKey" class="ghost">پاک‌کردن Key</button></div>
+            <div id="brainStatus" class="mini-status"></div>
+            <div class="info-box">Brain فقط متن final Turn را دریافت می‌کند. Audio/WAV به Brain پاسخ‌دهی فرستاده نمی‌شود.</div>
+            <hr class="soft-sep" />
+            <div class="panel-head"><h2>Persian Router Regression</h2><button id="runRouterTests" class="ghost small">Run</button></div>
+            <div id="routerTests" class="router-tests compact"></div>
+            <div class="router-probe"><textarea id="routerProbe" rows="2" placeholder="یک جمله برای تشخیص Router..."></textarea><button id="routerProbeBtn">Classify</button></div>
+            <pre id="routerProbeResult" class="codebox smallbox"></pre>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>ASR Runtime</h2><span id="asrState" class="badge neutral">DISABLED</span></div>
+            <label>Provider
+              <select id="asrProvider">
+                <option value="gemini-audio-experimental" selected>Gemini Audio — Experimental validation</option>
+                <option value="google-stt-v2">Google Cloud STT V2 — production target adapter</option>
+              </select>
+            </label>
+            <div id="asrGeminiFields">
+              <label>Gemini ASR Model<input id="asrGeminiModel" value="gemini-3.1-flash-lite" /></label>
+              <label>Gemini API Key<input id="asrApiKey" type="password" autocomplete="off" placeholder="برای تست می‌تواند همان AI Studio key باشد" /></label>
+            </div>
+            <div id="asrGoogleFields" class="hidden">
+              <label>Google Cloud Project ID<input id="asrProjectId" placeholder="my-gcp-project" /></label>
+              <div class="form-grid2"><label>Location<input id="asrLocation" value="asia-southeast1" /></label><label>Model<input id="asrGoogleModel" value="chirp_3" /></label></div>
+              <label>OAuth Access Token<input id="asrAccessToken" type="password" autocomplete="off" placeholder="ya29..." /></label>
+            </div>
+            <label>Language<input id="asrLanguage" value="fa-IR" /></label>
+            <label class="checkline"><input id="asrAutoCommit" type="checkbox" checked /> Final transcript → Turn خودکار</label>
+            <div class="row"><button id="applyAsr">فعال‌سازی ASR</button><button id="disableAsr" class="ghost">خاموش</button><button id="retryAsr" class="ghost">Retry failed</button></div>
+            <div id="asrStatusText" class="mini-status"></div>
+            <div class="info-box"><strong>دو مسیر:</strong><br>Google STT V2 برای معماری نهایی در نظر گرفته شده است. Gemini Audio فقط adapter آزمایشی برای اینکه همین build روی سیستم تو Audio→Text قابل تست باشد؛ real-time streaming محسوب نمی‌شود.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-diagnostics" class="view">
+        <div class="grid2">
+          <section class="panel">
+            <div class="panel-head"><h2>Metrics</h2><button id="refreshMetrics" class="ghost small">Refresh</button></div>
+            <div id="metrics" class="metric-grid"></div>
+            <div class="info-box">Schema Errors باید در استفاده عادی صفر بماند. اگر >0 شد، Diagnostics ID را نگه دار؛ raw provider payload در Live Brain چاپ نمی‌شود.</div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Diagnostics Export</h2><span class="badge neutral">No secrets / no audio</span></div>
+            <button id="exportDiag">Export JSON</button>
+            <pre id="diagPreview" class="codebox tall"></pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>Live Transcript Validation Build — WASAPI + persistent audio + immutable segments + visible final transcript + selectable Q/A Turn cards; Rust neural VAD/gRPC partial streaming pending</span><span id="versionHandshake">version handshake...</span></footer>
+  </div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

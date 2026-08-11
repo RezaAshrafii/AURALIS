@@ -1,0 +1,86 @@
+AURALIS v0.10.4 — LIVE TRANSCRIPT VALIDATION TEST PLAN
+======================================================
+
+هدف اصلی این نسخه:
+اثبات مسیر واقعی Mic -> WASAPI -> Spool -> Segment -> ASR -> Live Transcript -> Turn Card -> Answer.
+
+پیش‌نیاز:
+- ZIP را Extract کن و Auralis.vbs را اجرا کن.
+- در Brain، Gemini API Key را وارد کن.
+- دکمه «فعال‌سازی صوت→متن + Brain» را بزن.
+- وضعیت Live Transcript باید از ASR OFF به READY/HEALTHY تغییر کند.
+
+TEST 1 — Mic -> Text
+1) Session را Start کن.
+2) Mic=ON ، System Loopback=OFF.
+3) Native Capture را Start کن.
+4) واضح بگو: «واریانس در مدل رگرسیون چیست؟»
+5) حدود 1 تا 2 ثانیه سکوت کن.
+PASS:
+- Live Transcript یک Segment نشان دهد.
+- وضعیت Segment از FROZEN/RUNNING به FINAL برسد.
+- متن نزدیک به جمله گفته‌شده باشد.
+- Turn Card مستقل ساخته شود.
+FAIL:
+- seq میکروفون بالا برود ولی هیچ Segment ساخته نشود.
+- Segment ساخته شود ولی ASR بدون error قابل مشاهده متوقف شود.
+
+TEST 2 — Three-turn isolation
+سه جمله را با حدود 1.5 ثانیه فاصله بگو:
+1. «واریانس چیست؟»
+2. «ضریب تعیین چیست؟»
+3. «رگرسیون از مبدأ چه زمانی مناسب است؟»
+PASS:
+- سه Segment/Turn جدا.
+- هیچ Turn شامل متن سؤال قبلی نباشد.
+- هر کارت سؤال خودش را نشان دهد.
+
+TEST 3 — Question + Answer per card
+منبع رگرسیون داخل test-data را Import کن. Strict Source روشن باشد.
+سه سؤال بالا را تکرار کن.
+PASS:
+- اگر Router سؤال را answerable تشخیص داد، همان کارت پاسخ خودش را دریافت کند.
+- با کلیک روی Turn 1 و Turn 3، Inspector سؤال/پاسخ همان Turn را نشان دهد.
+- پاسخ Turn جدید، Turn قدیمی را overwrite نکند.
+
+TEST 4 — Statement silence
+بگو: «امروز درباره رگرسیون مطالعه کردم.»
+PASS:
+- Transcript ثبت شود.
+- Turn می‌تواند statement شود.
+- Brain پاسخ خودکار تولید نکند.
+
+TEST 5 — ASR activation after capture
+1) ASR را خاموش کن.
+2) یک جمله بگو تا Segment frozen شود.
+3) دوباره «فعال‌سازی صوت→متن + Brain» را بزن.
+PASS:
+- pending segment خودکار queue شود.
+- متن آن بدون ضبط دوباره ظاهر شود.
+
+TEST 6 — Quiet speech
+یک جمله را آرام ولی قابل شنیدن بگو.
+PASS اولیه:
+- Segment تشخیص داده شود و متن تولید شود.
+اگر نه، Diagnostics را نگه دار؛ threshold هنوز validation است.
+
+TEST 7 — System Loopback
+بعد از پاس Mic:
+Mic=OFF ، System Loopback=ON. یک فایل/ویدئوی فارسی پخش کن.
+PASS:
+- system-loopback seq افزایش یابد.
+- Live Transcript متن system را نشان دهد.
+- Turn source_role=system باشد.
+
+TEST 8 — Gap observation
+قبل و بعد تست عدد gaps را ثبت کن.
+PASS معماری:
+- gap مخفی نباشد و reason در Diagnostics وجود داشته باشد.
+- queue overflow یا discontinuity به‌صورت explicit ثبت شود.
+
+برای هر FAIL بفرست:
+- Screenshot Session
+- Screenshot Brain/ASR status
+- Diagnostics JSON
+- تعداد gaps
+- آخرین 8 ردیف Live Transcript
