@@ -1,0 +1,17 @@
+﻿# Runtime / generated state
+runtime/
+data/
+releases/
+node_modules/
+
+# Generated / binary artifacts
+*.exe
+*.dll
+*.log
+
+# Local verification artifacts
+VERIFY-FULL.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
