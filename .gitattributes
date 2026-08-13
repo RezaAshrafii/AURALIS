@@ -1,0 +1,30 @@
+* text=auto eol=lf
+
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.bin binary
+*.class binary
+*.jar binary
+*.node binary
+*.wasm binary
+*.wav binary
+*.wave binary
+*.mp3 binary
+*.m4a binary
+*.aac binary
+*.flac binary
+*.ogg binary
+*.opus binary
+*.webm binary
+*.mp4 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.7z binary
+*.gz binary
+*.pdf binary

@@ -1,0 +1,36 @@
+{
+  "task": "AUR-1101",
+  "status": "verified",
+  "branch": "dev/AUR-1101-foundation",
+  "baseline": "28f709252582fc21f27982191c37fe786da4b700",
+  "scope": "reproducible source foundation",
+  "behavior_changes": false,
+  "application_files_changed": false,
+  "binary_artifacts_added": false,
+  "verification": {
+    "commands": [
+      "node --test \"tests/*.test.mjs\"",
+      "npm test",
+      "npm run verify",
+      "git diff --check"
+    ],
+    "status": "passed",
+    "tests": {
+      "total": 59,
+      "passed": 48,
+      "failed": 0,
+      "skipped": 11
+    },
+    "skips": {
+      "absent_compiled_probe": 1,
+      "unshipped_native_probe_source": 10
+    },
+    "diff_check": "passed",
+    "scope_audit": "passed",
+    "secret_signature_scan": "passed"
+  },
+  "known_limitations": [
+    "Native and probe coverage is skipped when generated binaries or unshipped probe sources are absent.",
+    "Real Windows audio-device and provider integration remain release-environment checks."
+  ]
+}

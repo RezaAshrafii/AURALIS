@@ -6,7 +6,7 @@ const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8')
 const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
 const kit = await readFile(new URL('../app/ui-kit.js', import.meta.url), 'utf8');
 const html = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
-const css = await readFile(new URL('../app/styles.css', import.meta.url), 'utf8');
+const css = (await readFile(new URL('../app/styles.css', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
 const react = await readFile(new URL('../app/vendor/react.production.min.js', import.meta.url), 'utf8');
 const reactDom = await readFile(new URL('../app/vendor/react-dom.production.min.js', import.meta.url), 'utf8');
 

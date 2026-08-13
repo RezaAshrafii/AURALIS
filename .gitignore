@@ -15,3 +15,86 @@ VERIFY-FULL.log
 # OS/editor noise
 .DS_Store
 Thumbs.db
+
+# Build output and caches
+build/
+dist/
+out/
+target/
+coverage/
+.cache/
+.parcel-cache/
+.turbo/
+.npm/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+.tmp/
+tmp/
+*.cache
+*.pyc
+*.tsbuildinfo
+*.tmp
+*.temp
+
+# Additional executables, libraries, archives, and object files
+*.so
+*.dylib
+*.bin
+*.obj
+*.o
+*.a
+*.lib
+*.pdb
+*.class
+*.jar
+*.node
+*.wasm
+*.zip
+*.7z
+*.tar
+*.tgz
+*.gz
+
+# Audio and video captures
+*.wav
+*.wave
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.opus
+*.webm
+*.mp4
+
+# Databases and local persistence
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+.npmrc
+.pypirc
+id_rsa
+id_ed25519
+credentials*.json
+secrets*.json
+
+# Tooling and editor noise
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
