@@ -1,0 +1,7 @@
+{
+  "name": "@auralis/contracts",
+  "version": "0.10.12",
+  "private": true,
+  "type": "module",
+  "exports": "./index.mjs"
+}

@@ -1,0 +1,26 @@
+{
+  "task": "AUR-1102",
+  "base_commit": "e4906cd7da90da3559918420fec1ee2a7ea6fd94",
+  "head_commit": "SELF",
+  "summary": "Added a dependency-free authoritative CURRENT application contract, explicit TARGET/FUTURE separation, and deterministic source-only drift coverage.",
+  "changed_files": [
+    "docs/tasks/AUR-1102.md",
+    "packages/contracts/package.json",
+    "packages/contracts/index.mjs",
+    "packages/contracts/current.mjs",
+    "packages/contracts/target-future.mjs",
+    "tests/contract-current.test.mjs",
+    "docs/adr/0002-current-contract-authority.md",
+    "handoff/AUR-1102.json"
+  ],
+  "tests": [
+    "node --test \"tests/contract-current.test.mjs\"",
+    "node --test \"tests/*.test.mjs\"",
+    "npm run verify",
+    "git diff --check"
+  ],
+  "known_failures": [],
+  "risks": [
+    "Source-only validation does not exercise optional native binaries, devices, external providers, or runtime SQLite data."
+  ]
+}
