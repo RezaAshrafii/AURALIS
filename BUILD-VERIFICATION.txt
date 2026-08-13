@@ -1,0 +1,38 @@
+Auralis v0.10.12 Build Verification
+=================================
+
+Release: Focused Workspace & Conversation Hub
+
+Syntax
+- server.mjs: PASS
+- app/app-react.js: PASS
+- app/ui-kit.js: PASS
+
+Automated tests
+- Source: 59 total / 48 PASS / 0 FAIL / 11 SKIP
+  (Source package does not include compiled Windows probe binaries or native-probe Go source.)
+- Windows Portable: 59 total / 49 PASS / 0 FAIL / 10 SKIP
+
+UI regression gates
+- Processing Cycle absent from main Session render: PASS
+- Recent Sessions moved to drawer: PASS
+- Current Session horizontal summary strip: PASS
+- Live Transcript transcription-only and newest-first: PASS
+- No horizontal transcript carousel in v0.10.12 UI patch: PASS
+- Conversation Hub modal present: PASS
+- Main Q&A duplication removed: PASS
+- Turn selection is display-only: PASS
+- Auto Answer remains server-owned: PASS
+- Z hotkey behavior retained: PASS
+- Processing Cycle remains in System diagnostics: PASS
+
+Package consistency
+- Shared Source/Portable product files checked: 56
+- SHA-256 mismatches: 0
+- runtime/bun.exe: PE32+ x86-64
+- native/auralis-capture-probe.exe: PE32+ x86-64
+- native/auralis-spool-inspect.exe: PE32+ x86-64
+
+Environment limitation
+- Windows Bun/WASAPI runtime cannot execute in this Linux build environment.
+- Real microphone, Gemini provider, source-grounded answer quality and Windows visual rendering require the user Windows acceptance test.

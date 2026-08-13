@@ -1,0 +1,81 @@
+AURALIS v0.10.12 — TARGETED WINDOWS TEST PLAN
+================================================
+
+هدف این نسخه:
+- ساده‌سازی Workspace اصلی بدون تغییر مسیر Audio/ASR/RAG/Brain
+- حذف چرخه پردازش و جلسات اخیر از صفحه اصلی
+- نمایش Current Session به شکل نوار افقی مینیمال
+- Live Transcript فقط برای رونویسی صوت، بدون تکرار پاسخ‌ها و بدون اسکرول افقی
+- انتقال همه Turnها و پاسخ‌های آماده به Conversation Hub
+- حفظ Auto Answer و Hotkey Z
+
+TEST 1 — Main Workspace
+1) برنامه را اجرا کن و Session را باز کن.
+PASS:
+- Processing Cycle در صفحه اصلی وجود ندارد.
+- Recent Sessions به شکل کارت خام در صفحه اصلی وجود ندارد.
+- Current Session یک نوار افقی کم‌ارتفاع است.
+- فقط Live Transcript + Turn Inspector هسته اصلی صفحه‌اند.
+
+TEST 2 — Live Transcript
+1) Mic روشن، System خاموش.
+2) سه جمله/سؤال با مکث طبیعی بگو.
+PASS:
+- آخرین متن بالاتر از متن‌های قبلی دیده شود.
+- پاسخ مدل داخل Live Transcript تکرار نشود.
+- در بخش اصلی اسکرول افقی وجود نداشته باشد.
+- دکمه «متن کامل» آرشیو همه transcriptها را در Modal باز کند.
+
+TEST 3 — Automatic Answer
+Mode: Study یا Oral Copilot با System Audio خاموش.
+بگو: «رگرسیون خطی ساده چیست؟»
+PASS:
+- Turn ساخته شود.
+- بدون انتخاب کارت و بدون Z پاسخ در پس‌زمینه ساخته شود.
+- Inspector آخرین Turn را به صورت زنده دنبال کند.
+
+TEST 4 — Conversation Hub
+1) حداقل 5 Turn بساز.
+2) «مکالمات» را بزن.
+PASS:
+- همه Turnها در Modal موجود باشند.
+- وضعیت «پاسخ آماده / در حال آماده‌سازی / دستی» مشخص باشد.
+- انتخاب Turn فقط پاسخ ذخیره‌شده همان Turn را نمایش دهد.
+- انتخاب Turn Provider را دوباره فراخوانی نکند.
+- Z همچنان پاسخ فوری Turn انتخاب‌شده/آخرین سؤال باشد.
+
+TEST 5 — Recent Sessions Drawer
+1) دکمه «جلسات» گوشه Header را بزن.
+PASS:
+- Drawer باز شود.
+- Sessionهای قبلی در صفحه اصلی تکرار نشده باشند.
+- با Session فعال، تلاش برای باز کردن Session قبلی باید هشدار امن بدهد.
+
+TEST 6 — Source Grounding
+Source: REGRESSION1_BEHBOODIAN_AURALIS_HEAVY_SOURCE_FA.txt
+Strict Source: ON
+Ask:
+«چرا فاصله پیش‌بینی از فاصله اطمینان میانگین پاسخ عریض‌تر است؟»
+PASS:
+- پاسخ علمی مرتبط باشد.
+- grounding=source یا معادل UI آن باشد.
+- شواهد فقط در Inspector و به شکل disclosure دیده شوند.
+Ask hallucination trap:
+«نام استاد فرضی فصل ۱۲ چیست؟»
+PASS:
+- پاسخ insufficient / اطلاعات کافی در منبع نیست.
+
+TEST 7 — Theme / responsive
+1920x1080 و در صورت امکان 1366x768.
+PASS:
+- Light/Dark هر دو سالم.
+- Modal و Drawer از viewport بیرون نروند.
+- Main workspace overlap نداشته باشد.
+
+برای هر FAIL ثبت کن:
+- Screenshot
+- Mode
+- Mic/System state
+- Turn number
+- آیا Auto Answer فعال بوده؟
+- Diagnostics JSON اگر failure مربوط به ASR/Brain است.
