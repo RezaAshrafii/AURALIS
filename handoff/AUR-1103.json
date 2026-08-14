@@ -1,0 +1,41 @@
+{
+  "task": "AUR-1103",
+  "base_commit": "57fa0a4",
+  "head_commit": "SELF",
+  "summary": "Added a minimal pinned React 18, strict TypeScript, and Vite workspace that builds the preserved UI source graph without changing the CURRENT /v1 contract or visual design.",
+  "changed_files": [
+    "package.json",
+    "package-lock.json",
+    "apps/web/package.json",
+    "apps/web/index.html",
+    "apps/web/src/main.ts",
+    "apps/web/tsconfig.json",
+    "apps/web/vite.config.ts",
+    "server.mjs",
+    "scripts/verify.mjs",
+    "tests/frontend-foundation.test.mjs",
+    "docs/tasks/AUR-1103.md",
+    "docs/adr/0003-incremental-vite-bridge.md",
+    "docs/architecture.md",
+    "docs/ai/CURRENT_ARCHITECTURE.md",
+    "docs/ai/IMPLEMENTATION_STATUS.md",
+    "docs/ai/MASTER_ROADMAP.md",
+    "handoff/AUR-1103.json"
+  ],
+  "tests": [
+    "UNIT: npm run frontend:typecheck",
+    "UNIT: npm run frontend:test",
+    "INTEGRATION: npm run frontend:build",
+    "INTEGRATION: source app local browser smoke via trusted Bun",
+    "INTEGRATION: Vite artifact local browser smoke via trusted Bun",
+    "UNIT/FIXTURE: node --test \"tests/*.test.mjs\"",
+    "INTEGRATION: npm run verify",
+    "SOURCE HYGIENE: git diff --check"
+  ],
+  "known_failures": [],
+  "risks": [
+    "The preserved UI component modules remain JavaScript behind the strict TypeScript bootstrap and require incremental typing in later frontend tasks.",
+    "Eleven native/probe checks remain explicit source-checkout skips and are not Windows hardware validation.",
+    "Generated dist/web output is ignored and must be rebuilt from the exact lockfile for testing or packaging."
+  ]
+}

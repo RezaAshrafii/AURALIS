@@ -1,0 +1,21 @@
+{
+  "name": "@auralis/web",
+  "version": "0.11.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "node --test --test-isolation=none ../../tests/frontend-foundation.test.mjs",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.24",
+    "@types/react-dom": "18.3.7",
+    "typescript": "5.9.3",
+    "vite": "7.1.7"
+  }
+}

@@ -6,7 +6,7 @@ This is the compact execution index derived from `AURALIS_CODEX_MASTER_PACKET.md
 
 | Milestone | Tasks | Status | Exit gate |
 | --- | --- | --- | --- |
-| v0.11 Engineering Foundation | AUR-1101 contracts/foundation, AUR-1102 CURRENT contract, AUR-1103 TypeScript/Vite, AUR-1104 layout/gate | IN PROGRESS — 1101/1102 done | Clean source, repeatable build, versioned contracts, frontend typecheck/test/build, regressions green, portable smoke procedure and runnable test procedure |
+| v0.11 Engineering Foundation | AUR-1101 contracts/foundation, AUR-1102 CURRENT contract, AUR-1103 TypeScript/Vite, AUR-1104 layout/gate | IN PROGRESS — 1101/1102/1103 done | Clean source, repeatable build, versioned contracts, frontend typecheck/test/build, regressions green, portable smoke procedure and runnable test procedure |
 | v0.12 Production Windows Audio Core | AUR-1201 domain/persistence, 1202 mic, 1203 loopback/dual, 1204 spool/ledger/gap, 1205 lifecycle/recovery, 1206 hardware gate | PENDING | Real mic, loopback, dual, right-channel, 44.1/48 kHz, device change, recovery, and 20-minute Windows capture; unknown gaps zero |
 | v0.13 Production Speech Engine | AUR-1301 derived audio through AUR-1307 dedupe/benchmark | PENDING | Neural VAD, immutable segments, partial/stable/final ASR, cloud/local boundaries, bounded retry, corpus metrics, runnable test build |
 | v0.14 Turn Intelligence + RAG | AUR-1401 through AUR-1406 | PENDING | Revision-driven Turns, correct ownership/modes, persisted Answer jobs, structured ingestion, strict cited retrieval, gold benchmark, isolation invariants |

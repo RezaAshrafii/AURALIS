@@ -3,8 +3,15 @@
   "version": "0.10.12",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "test": "node --test \"tests/*.test.mjs\"",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "frontend:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
+    "frontend:test": "node --test --test-isolation=none \"tests/frontend-foundation.test.mjs\"",
+    "frontend:build": "vite build --config apps/web/vite.config.ts"
   }
 }

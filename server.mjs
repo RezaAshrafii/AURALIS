@@ -9,7 +9,8 @@ import { parseAnswerEnvelope, AnswerSchemaError } from './core/answer-schema.mjs
 import { shouldAutoAnswerTurn, isRuntimeCapabilityQuestion, roleLabel } from './core/turn-policy.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)));
-const APP = join(ROOT, 'app');
+const SOURCE_APP = join(ROOT, 'app');
+const APP = process.env.AURALIS_USE_VITE_BUILD === '1' ? join(ROOT, 'dist', 'web') : SOURCE_APP;
 const DATA = join(ROOT, 'data');
 await mkdir(DATA, { recursive: true });
 
@@ -1506,6 +1507,6 @@ const server = Bun.serve({
   }
 });
 
-setTimeout(openBrowser, 180);
+if (process.env.AURALIS_NO_BROWSER !== '1') setTimeout(openBrowser, 180);
 setTimeout(warmNativeProbe, 450);
 console.log(`Auralis ${VERSION} at ${ORIGIN}`);

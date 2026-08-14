@@ -6,6 +6,7 @@ This document distinguishes the software that exists in the v0.10.12 baseline fr
 
 - `server.mjs` owns the local HTTP service and coordinates sessions, capture, transcription, retrieval, answer generation, and persistence.
 - `app/` contains the locally served React 18 interface and static assets.
+- `apps/web/` contains the strict TypeScript + Vite build boundary. It bundles the existing `app/` UI source graph through a typed compatibility bridge while the source-served UI remains available during incremental migration.
 - `core/` contains focused JavaScript policy and parsing modules used by the current server and contract tests.
 - Native capture is integrated through external validation/probe executables when they are present. Their absence in a source checkout is supported and produces explicit test skips.
 - `native/core/` is the Rust production-core foundation. Its domain, audio, ASR, health, and storage contracts do not yet replace the current server orchestration.

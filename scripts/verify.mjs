@@ -6,10 +6,18 @@ const requiredFiles = [
   'AGENTS.md',
   'CLAUDE.md',
   'package.json',
+  'package-lock.json',
   'server.mjs',
+  'apps/web/index.html',
+  'apps/web/package.json',
+  'apps/web/src/main.ts',
+  'apps/web/tsconfig.json',
+  'apps/web/vite.config.ts',
   'docs/architecture.md',
   'docs/adr/0001-incremental-source-foundation.md',
+  'docs/adr/0003-incremental-vite-bridge.md',
   'docs/tasks/AUR-1101.md',
+  'docs/tasks/AUR-1103.md',
   'handoff/AUR-1101.json',
 ];
 
@@ -44,6 +52,9 @@ try {
   run('Server syntax', process.execPath, ['--check', 'server.mjs']);
   run('Application syntax', process.execPath, ['--check', 'app/app-react.js']);
   run('UI kit syntax', process.execPath, ['--check', 'app/ui-kit.js']);
+  run('Frontend typecheck', process.execPath, ['node_modules/typescript/bin/tsc', '--project', 'apps/web/tsconfig.json', '--noEmit']);
+  run('Frontend tests', process.execPath, ['--test', 'tests/frontend-foundation.test.mjs']);
+  run('Frontend build', process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--config', 'apps/web/vite.config.ts']);
   run('Contract and regression tests', process.execPath, ['--test', 'tests/*.test.mjs']);
   console.log('\n[verify] PASS');
 } catch (error) {

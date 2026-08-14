@@ -7,11 +7,13 @@ This file is the compact source-of-truth for implemented architecture. It descri
 ## Runtime and process boundary
 
 - `server.mjs` is the runnable local product service. It uses Bun, binds only to `127.0.0.1:47832`, serves the UI, owns `/v1` routing, and orchestrates capture, ASR, turns, retrieval, answers, health, and persistence.
-- `app/` is the current static React 18 UI. React, ReactDOM, and Bootstrap are locally vendored; the UI uses non-overlapping HTTP polling rather than WebSocket or SSE.
+- `app/` is the current source-served React 18 UI. React, ReactDOM, and Bootstrap are locally vendored; the UI uses non-overlapping HTTP polling rather than WebSocket or SSE.
+- `apps/web/` is the strict TypeScript + Vite build boundary introduced by AUR-1103. Its typed entry bundles the same `app/` modules and CSS, so the source and generated UI paths do not duplicate product code.
 - `core/` contains dependency-free JavaScript domain policy for Persian routing, automatic-answer ownership, runtime-capability routing, and provider-answer validation.
 - `packages/contracts/` is the authoritative, machine-tested CURRENT/TARGET contract boundary. CURRENT `/v1` behavior must not drift during migration.
 - `native/core/` is a Rust domain and persistence scaffold. It is not yet the runnable production core.
 - The source checkout does not require generated executables. Optional native/probe validation is explicitly skipped when its binary or unshipped source is absent.
+- `server.mjs` serves `app/` by default. `AURALIS_USE_VITE_BUILD=1` selects ignored `dist/web/` output for test builds, and `AURALIS_NO_BROWSER=1` suppresses automatic external-browser launch during automation.
 
 ## Data and request flow
 
@@ -57,6 +59,7 @@ Audio is the source of truth. Transcript, Turn, retrieval evidence, and answer r
 - VAD and derived-audio behavior are validation/probe capabilities, not the target neural VAD pipeline.
 - ASR is segment-final; PARTIAL and STABLE_PREFIX revisions are not implemented.
 - Realtime UI delivery is polling over `event_log`; WebSocket is TARGET/FUTURE.
+- Strict typing currently covers the frontend bootstrap boundary; the preserved legacy component modules remain JavaScript and are to be migrated incrementally.
 - Source ingestion accepts submitted text. Production PDF/DOCX and structured metadata ingestion are not implemented.
 - Packaging is a prior portable baseline, not a reproducible source-built v1 release pipeline.
 
