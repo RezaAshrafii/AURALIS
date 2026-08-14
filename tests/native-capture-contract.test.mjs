@@ -11,6 +11,7 @@ const probeExeUrl = new URL('../native/auralis-capture-probe.exe', import.meta.u
 const hasProbeExe = existsSync(fileURLToPath(probeExeUrl));
 const go = hasProbeSource ? await readFile(goUrl, 'utf8') : '';
 const sql = await readFile(new URL('../native/core/src/storage/migrations/0001_audio_ledger.sql', import.meta.url), 'utf8');
+const ledgerRepository = await readFile(new URL('../native/core/src/storage/repository.rs', import.meta.url), 'utf8');
 
 test('portable includes the compiled Windows capture probe', {skip:!hasProbeExe&&'compiled probe is verified in Portable package'}, async () => {
   const info=await stat(probeExeUrl);
@@ -60,5 +61,6 @@ test('server replays native ledger and recovers unclosed raw chunks after restar
 test('target Rust ledger schema enforces non-empty sequence range', () => {
   assert.ok(sql.includes('CHECK(seq_end > seq_start)'));
   assert.ok(sql.includes('UNIQUE(channel_id, seq_start, seq_end)'));
-  assert.ok(sql.includes('PRAGMA journal_mode=WAL'));
+  assert.ok(ledgerRepository.includes('PRAGMA journal_mode=WAL'));
+  assert.ok(ledgerRepository.includes('transaction_with_behavior(TransactionBehavior::Immediate)'));
 });

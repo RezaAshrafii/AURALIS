@@ -1,6 +1,10 @@
 use std::{path::PathBuf, sync::Arc};
 
-use super::audio_frame::{AudioFrameMeta, ChannelId, SessionId};
+use super::{
+    audio_frame::{AudioFrameMeta, ChannelId, SessionId},
+    ledger::{AudioChannel, AudioChunk, Gap, LifecycleTransition, Session},
+    speech::{FrozenSpeechSegment, TranscriptRevision},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CoreError {
@@ -20,28 +24,74 @@ pub struct CapturedFrame {
     pub payload: Arc<[u8]>,
 }
 
-#[derive(Debug, Clone)]
-pub struct ClosedAudioChunk {
-    pub session_id: SessionId,
-    pub channel_id: ChannelId,
-    pub seq_start: u64,
-    pub seq_end: u64,
-    pub qpc_start_100ns: u64,
-    pub qpc_end_100ns: u64,
-    pub path: PathBuf,
-    pub byte_length: u64,
-    pub sha256_hex: String,
-    pub discontinuity: bool,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CaptureHandoffError {
+    Full,
+    Closed,
+}
+
+/// Non-blocking boundary used by the WASAPI event callback.
+///
+/// Implementations must return immediately. A `Full` result is observable loss
+/// and must be converted into a durable `Gap` by the persistence side.
+pub trait CaptureHandoffPort: Send + Sync {
+    fn try_submit(&self, frame: CapturedFrame) -> Result<(), CaptureHandoffError>;
+    fn capacity(&self) -> usize;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpoolContract {
+    pub root: PathBuf,
+    pub chunk_frames: u64,
+    pub sync_on_finalize: bool,
+}
+
+impl SpoolContract {
+    pub fn validate(&self) -> Result<(), CoreError> {
+        if self.root.as_os_str().is_empty() {
+            return Err(CoreError::InvalidState("spool root is required".into()));
+        }
+        if self.chunk_frames == 0 {
+            return Err(CoreError::InvalidState(
+                "spool chunk frame count must be non-zero".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SpoolAppendResult {
+    Buffered { next_sequence: u64 },
+    Finalized(Box<AudioChunk>),
+}
+
+/// Raw-spool ownership boundary. Implementations persist every frame, including
+/// silence, and finalize immutable chunks before the ledger accepts them.
+pub trait AudioSpoolPort: Send {
+    fn append(&mut self, frame: CapturedFrame) -> Result<SpoolAppendResult, CoreError>;
+    fn finalize_channel(&mut self, channel_id: &ChannelId)
+    -> Result<Option<AudioChunk>, CoreError>;
+}
+
+/// Durable audio-ledger boundary owned by the persistence worker, never by the
+/// capture callback. A forward sequence jump is invalid unless the same commit
+/// includes the exact `Gap` that explains it.
+pub trait AudioLedgerPort: Send {
+    fn create_session(&mut self, session: &Session) -> Result<(), CoreError>;
+    fn register_channel(&mut self, channel: &AudioChannel) -> Result<(), CoreError>;
+    fn commit_chunk(
+        &mut self,
+        chunk: &AudioChunk,
+        preceding_gap: Option<&Gap>,
+    ) -> Result<(), CoreError>;
+    fn record_gap(&mut self, gap: &Gap) -> Result<(), CoreError>;
+    fn record_lifecycle(&mut self, transition: &LifecycleTransition) -> Result<(), CoreError>;
 }
 
 pub trait AudioCapturePort: Send + Sync {
     fn start(&self, session_id: SessionId) -> Result<(), CoreError>;
     fn stop(&self) -> Result<(), CoreError>;
-}
-
-pub trait AudioSpoolPort: Send + Sync {
-    fn append(&self, frame: CapturedFrame) -> Result<(), CoreError>;
-    fn flush_channel(&self, channel_id: &ChannelId) -> Result<Option<ClosedAudioChunk>, CoreError>;
 }
 
 pub trait ClockPort: Send + Sync {
@@ -50,21 +100,29 @@ pub trait ClockPort: Send + Sync {
 }
 
 pub trait HealthReporter: Send + Sync {
-    fn component_transition(&self, component: &'static str, state: &'static str, detail: Option<&str>);
+    fn component_transition(
+        &self,
+        component: &'static str,
+        state: &'static str,
+        detail: Option<&str>,
+    );
 }
-
-
-use super::speech::{FrozenSpeechSegment, TranscriptRevision};
 
 pub trait VadPort: Send + Sync {
     fn observe(&self, frame: &CapturedFrame) -> Result<(), CoreError>;
 }
 
 pub trait AsrPort: Send + Sync {
-    fn transcribe_segment(&self, segment: &FrozenSpeechSegment) -> Result<TranscriptRevision, CoreError>;
+    fn transcribe_segment(
+        &self,
+        segment: &FrozenSpeechSegment,
+    ) -> Result<TranscriptRevision, CoreError>;
     fn cancel_segment(&self, segment_id: &str) -> Result<(), CoreError>;
 }
 
 pub trait TranscriptReconciler: Send + Sync {
-    fn choose_final(&self, revisions: &[TranscriptRevision]) -> Result<TranscriptRevision, CoreError>;
+    fn choose_final(
+        &self,
+        revisions: &[TranscriptRevision],
+    ) -> Result<TranscriptRevision, CoreError>;
 }

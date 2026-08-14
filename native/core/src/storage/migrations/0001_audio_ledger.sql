@@ -1,6 +1,3 @@
-PRAGMA journal_mode=WAL;
-PRAGMA foreign_keys=ON;
-
 CREATE TABLE IF NOT EXISTS AudioSession(
   id TEXT PRIMARY KEY,
   started_at_utc TEXT NOT NULL,

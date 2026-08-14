@@ -16,15 +16,23 @@ const requiredFiles = [
   'apps/web/vite.config.ts',
   'scripts/build-v011-test.mjs',
   'scripts/run-v011-test.ps1',
+  'native/Cargo.lock',
+  'native/Cargo.toml',
+  'native/core/Cargo.toml',
+  'native/core/src/domain/ledger.rs',
+  'native/core/src/storage/repository.rs',
+  'native/core/src/storage/migrations/0003_lifecycle.sql',
   'docs/architecture.md',
   'docs/adr/0001-incremental-source-foundation.md',
   'docs/adr/0003-incremental-vite-bridge.md',
   'docs/tasks/AUR-1101.md',
   'docs/tasks/AUR-1103.md',
   'docs/tasks/AUR-1104.md',
+  'docs/tasks/AUR-1201.md',
   'docs/V011_TEST_PROCEDURE.md',
   'handoff/AUR-1101.json',
   'handoff/AUR-1104.json',
+  'handoff/AUR-1201.json',
   'handoff/v0.11.0.json',
 ];
 
@@ -59,6 +67,10 @@ try {
   run('Server syntax', process.execPath, ['--check', 'server.mjs']);
   run('Application syntax', process.execPath, ['--check', 'app/app-react.js']);
   run('UI kit syntax', process.execPath, ['--check', 'app/ui-kit.js']);
+  const cargo = process.env.CARGO || 'cargo';
+  run('Rust format', cargo, ['fmt', '--manifest-path', 'native/Cargo.toml', '--all', '--', '--check']);
+  run('Rust clippy', cargo, ['clippy', '--manifest-path', 'native/Cargo.toml', '--workspace', '--all-targets', '--locked', '--', '-D', 'warnings']);
+  run('Rust tests', cargo, ['test', '--manifest-path', 'native/Cargo.toml', '--workspace', '--locked']);
   run('Frontend typecheck', process.execPath, ['node_modules/typescript/bin/tsc', '--project', 'apps/web/tsconfig.json', '--noEmit']);
   run('Frontend tests', process.execPath, ['--test', 'tests/frontend-foundation.test.mjs']);
   run('Frontend build', process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--config', 'apps/web/vite.config.ts']);

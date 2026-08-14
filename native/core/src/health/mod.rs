@@ -9,9 +9,5 @@ pub enum ComponentState {
     Stopped,
 }
 
-pub const CRITICAL_PHASE2_COMPONENTS: [&str; 4] = [
-    "CaptureMic",
-    "CaptureSystem",
-    "SpoolWriter",
-    "Storage",
-];
+pub const CRITICAL_PHASE2_COMPONENTS: [&str; 4] =
+    ["CaptureMic", "CaptureSystem", "SpoolWriter", "Storage"];

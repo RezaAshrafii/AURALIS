@@ -4,19 +4,22 @@ Updated: 2026-08-14
 
 ## Repository checkpoint
 
-- Branch: `dev/AUR-1102-contracts`
-- Verified AUR-1104 base HEAD: `602a55880c09681547ae9f15fc4cdfdd5191c789`
+- Branch: `dev/v0.12.0-production-audio`
+- Verified v0.11.0 completion HEAD: `ee59002d3dbaf60c571d8a315520b1ba274db3ca`
 - Rollback anchor: `1ac530ee4e59e52c931313fa3b3366a06e497e87`
-- Product version: v0.11.0 Engineering Foundation
-- Completed: AUR-1101, AUR-1102, AUR-1103, AUR-1104
+- Product version: v0.11.0 Engineering Foundation (complete)
+- Active milestone: v0.12.0 Production Windows Audio Core
+- Completed: AUR-1101, AUR-1102, AUR-1103, AUR-1104, AUR-1201
 - v0.11 milestone gate: COMPLETE at the AUR-1104 commit (`head_commit: SELF` in handoff)
-- Next: AUR-1201 — Audio Core Domain + Persistence
+- Active task: AUR-1202 — Event-Driven WASAPI Microphone Capture
 
 ## Deterministic baseline
 
 | Label | Command | Result |
 | --- | --- | --- |
-| UNIT / FIXTURE / source contract | `node --test "tests/*.test.mjs"` | PASS — 71 total, 60 pass, 11 skip, 0 fail |
+| UNIT / FIXTURE / source contract | `node --test "tests/*.test.mjs"` | PASS — 74 total, 63 pass, 11 expected skip, 0 fail |
+| UNIT / INTEGRATION / Rust audio core | `cargo test --manifest-path native/Cargo.toml --workspace --locked` | PASS — 11 pass, 0 fail |
+| Source quality / Rust audio core | `cargo fmt ... --check` and `cargo clippy ... -D warnings` | PASS |
 | Frontend typecheck | `npm run frontend:typecheck` | PASS — strict TypeScript |
 | Frontend tests | `npm run frontend:test` | PASS — 3 pass, 0 fail |
 | Frontend production build | `npm run frontend:build` | PASS — Vite 7.1.7, 25 modules |
@@ -54,12 +57,12 @@ This audit is complete. Use this table for later milestones; do not repeat repos
 
 ## Immediate acceptance queue
 
-1. AUR-1201 through AUR-1205: production Rust audio core implementation and automated verification.
+1. AUR-1202 through AUR-1205: production Rust audio core implementation and automated verification.
 2. AUR-1206: mandatory real Windows hardware gate. This is the next expected human-validation stop.
 
 ## Standing risks
 
-- Rust tooling is not currently available on `PATH`; source-only Rust tests cannot yet be executed in this environment.
+- Rust 1.97.1 is installed locally for v0.12 format, clippy, build, and test gates.
 - The trusted Bun runtime and compiled validation probe are generated/runtime dependencies and must not be committed.
 - Provider credentials and paid calls are not required for provider-independent implementation, but live provider validation will require explicit user-supplied credentials/credit.
 - No milestone may be called final based on fixture results when its gate requires real Windows hardware.

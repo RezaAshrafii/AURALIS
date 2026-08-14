@@ -1,0 +1,30 @@
+{
+  "task": "AUR-1201",
+  "base_commit": "ee59002d3dbaf60c571d8a315520b1ba274db3ca",
+  "head_commit": "SELF",
+  "summary": "Hardened the existing Rust scaffold into a typed audio source-of-truth domain and versioned SQLite WAL ledger with atomic no-silent-gap sequence enforcement.",
+  "implemented": [
+    "serializable Session, AudioChannel, AudioChunk, Gap, CaptureState, DeviceState, and RecoveryState entities",
+    "per-channel source kind, native format, channel mask, monotonic sequence, QPC, and device-position metadata",
+    "non-blocking capture handoff plus raw spool and durable ledger ports",
+    "idempotent ordered SQLite migrations with WAL, foreign keys, lifecycle history, and sequence indexes",
+    "transactional chunk commits that reject regression and unexplained forward sequence jumps",
+    "explicit known and unknown gap extents queryable for the eventual hardware gate",
+    "Rust format, clippy, and tests integrated into the repository verification gate"
+  ],
+  "tests_passed": [
+    "UNIT: cargo test --manifest-path native/Cargo.toml --workspace --locked — 11 pass, 0 fail",
+    "SOURCE QUALITY: cargo fmt --manifest-path native/Cargo.toml --all -- --check — PASS",
+    "SOURCE QUALITY: cargo clippy --manifest-path native/Cargo.toml --workspace --all-targets --locked -- -D warnings — PASS",
+    "UNIT/FIXTURE: node --test tests/*.test.mjs — 74 total, 63 pass, 11 expected skip, 0 fail",
+    "INTEGRATION: npm run verify — PASS",
+    "SOURCE HYGIENE: git diff --check — PASS"
+  ],
+  "real_windows_hardware": "NOT RUN — not claimed by AUR-1201",
+  "known_failures": [],
+  "risks": [
+    "The domain and ledger are compiled production boundaries, but no tracked Rust WASAPI capture implementation exists until AUR-1202.",
+    "Unknown gap extents remain explicit failures for the AUR-1206 hardware gate rather than being counted as zero loss."
+  ],
+  "next_task": "AUR-1202"
+}

@@ -13,6 +13,9 @@
     "frontend:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "frontend:test": "node --test --test-isolation=none \"tests/frontend-foundation.test.mjs\"",
     "frontend:build": "vite build --config apps/web/vite.config.ts",
-    "build:v0.11:test": "node scripts/build-v011-test.mjs"
+    "build:v0.11:test": "node scripts/build-v011-test.mjs",
+    "audio-core:fmt": "cargo fmt --manifest-path native/Cargo.toml --all -- --check",
+    "audio-core:clippy": "cargo clippy --manifest-path native/Cargo.toml --workspace --all-targets --locked -- -D warnings",
+    "audio-core:test": "cargo test --manifest-path native/Cargo.toml --workspace --locked"
   }
 }
