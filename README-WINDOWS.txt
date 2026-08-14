@@ -1,6 +1,12 @@
-Auralis v0.10.12 — Focused Workspace & Conversation Hub
+Auralis v0.11.0 — Engineering Foundation
 
-Run: Auralis.vbs
+Source test build:
+1. npm ci --ignore-scripts
+2. npm run build:v0.11:test
+3. Follow docs/V011_TEST_PROCEDURE.md with a trusted external bun.exe.
+
+The prior v0.10.12 portable baseline can still be launched with its Auralis.vbs.
+Generated runtimes, binaries, databases, and dist output are not source files.
 
 Product workspace changes:
 - current session is a minimal horizontal strip
@@ -12,4 +18,10 @@ Product workspace changes:
 - all turns are available from Conversation Hub; selecting a turn only displays its already-prepared answer
 - automatic answer generation remains default; Z remains an immediate/manual override
 
-Architecture note: captured audio remains the source of truth. Neural VAD, true streaming partial/final ASR, local whisper fallback and final soak validation remain later production milestones.
+Engineering foundation:
+- authoritative CURRENT contracts remain versioned and source-tested
+- React 18 UI has a strict TypeScript + Vite build boundary without a visual redesign
+- the deterministic test builder compares two byte-identical frontend builds
+- the unchanged loopback /v1 service can serve either the source UI or generated test UI
+
+Architecture note: captured audio remains the source of truth. Production Rust WASAPI, neural VAD, true streaming partial/final ASR, local whisper fallback and final soak validation remain later milestones.

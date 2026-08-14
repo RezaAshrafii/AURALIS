@@ -1,6 +1,6 @@
 # AURALIS architecture
 
-This document distinguishes the software that exists in the v0.10.12 baseline from the intended direction. Target statements are not claims about current production behavior.
+This document distinguishes the software that exists in the v0.11.0 engineering foundation from the intended direction. v0.11 preserves the v0.10.12 product behavior while adding contracts and deterministic build tooling. Target statements are not claims about current production behavior.
 
 ## CURRENT
 

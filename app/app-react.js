@@ -41,7 +41,7 @@
     constructor(props){
       super(props);
       this.state={
-        token:'',version:'0.10.12',view:'session',theme:lsGet('theme','dark'),connection:'booting',
+        token:'',version:'0.11.0',view:'session',theme:lsGet('theme','dark'),connection:'booting',
         health:null,metrics:null,native:null,asr:null,brainRuntime:null,
         sessions:[],sessionId:null,activeSessionId:null,sessionActive:false,currentSession:null,
         mode:lsGet('mode','oral_copilot'),mic:lsGet('mic',true),loopback:lsGet('loopback',true),chunkSeconds:Number(lsGet('chunkSeconds',5)),
@@ -96,7 +96,7 @@
         if(!response.ok)throw new Error('Bootstrap HTTP '+response.status);
         var bootstrap=await response.json();
         this.token=String(bootstrap.token||'');
-        this.setState({token:this.token,version:String(bootstrap.version||'0.10.12')});
+        this.setState({token:this.token,version:String(bootstrap.version||'0.11.0')});
         var sessionData=await this.refreshSessions();
         await Promise.all([this.refreshHealth(),this.refreshNative(),this.refreshRuntime(),this.refreshMetrics(),this.refreshSources()]);
         var sessions=sessionData&&sessionData.sessions||[];
@@ -436,7 +436,7 @@
       var healthStatus=text(this.state.health&&this.state.health.status,'connecting').toUpperCase();
       var healthTone=toneForState(healthStatus);
       return h('header',{className:'appbar'},
-        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.10.12 · Focused Workspace & Conversation Hub'))),
+        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.11.0 · Engineering Foundation'))),
         h('nav',{className:'top-nav','aria-label':'بخش‌های برنامه'},NAV_ITEMS.map(function(item){
           var active=this.state.view===item.value;
           return h('button',{key:item.value,type:'button',className:'nav-item'+(active?' active':''),onClick:function(){this.setState({view:item.value});}.bind(this),'aria-current':active?'page':undefined},h('span',null,item.label),h('small',null,item.caption));

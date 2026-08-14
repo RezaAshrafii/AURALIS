@@ -1,0 +1,47 @@
+{
+  "task": "AUR-1104",
+  "base_commit": "602a55880c09681547ae9f15fc4cdfdd5191c789",
+  "head_commit": "SELF",
+  "summary": "Closed the v0.11 engineering gate with synchronized version metadata, a two-pass deterministic Vite artifact builder, an exact trusted-Bun launch procedure, full regression evidence, and source/runtime separation.",
+  "changed_files": [
+    "VERSION",
+    "README-WINDOWS.txt",
+    "package.json",
+    "package-lock.json",
+    "packages/contracts/package.json",
+    "packages/contracts/current.mjs",
+    "app/version.json",
+    "app/index.html",
+    "app/app-react.js",
+    "apps/web/index.html",
+    "server.mjs",
+    "scripts/build-v011-test.mjs",
+    "scripts/run-v011-test.ps1",
+    "scripts/verify.mjs",
+    "tests/v01010-ui-regression.test.mjs",
+    "tests/v011-gate.test.mjs",
+    "docs/tasks/AUR-1104.md",
+    "docs/V011_TEST_PROCEDURE.md",
+    "docs/architecture.md",
+    "docs/ai/CURRENT_ARCHITECTURE.md",
+    "docs/ai/IMPLEMENTATION_STATUS.md",
+    "docs/ai/MASTER_ROADMAP.md",
+    "handoff/AUR-1104.json",
+    "handoff/v0.11.0.json"
+  ],
+  "tests": [
+    "UNIT: node --test --test-isolation=none \"tests/v011-gate.test.mjs\"",
+    "INTEGRATION: npm ci --ignore-scripts",
+    "INTEGRATION: npm run build:v0.11:test",
+    "INTEGRATION: documented launcher health/version/index/asset smoke",
+    "UNIT/FIXTURE: node --test \"tests/*.test.mjs\"",
+    "INTEGRATION: npm run verify",
+    "SOURCE HYGIENE: git diff --check"
+  ],
+  "known_failures": [],
+  "risks": [
+    "Eleven native/probe checks are expected source-checkout skips and are not real Windows hardware validation.",
+    "The source test launcher requires a trusted external Bun runtime; self-contained portable packaging remains a later milestone.",
+    "Rust tooling is not currently on PATH, so the existing Rust scaffold has not been compiled in this environment."
+  ]
+}

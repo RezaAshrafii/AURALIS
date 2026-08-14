@@ -87,9 +87,9 @@ test('low-level telemetry stays out of the central conversation column', () => {
 });
 
 test('release metadata identifies the focused workspace conversation hub build', () => {
-  assert.ok(server.includes("0.10.12-focused-workspace-conversation-hub.1"));
+  assert.ok(server.includes("0.11.0-engineering-foundation.1"));
   assert.ok(server.includes("FOCUSED_WORKSPACE_CONVERSATION_HUB"));
-  assert.ok(html.includes('Auralis v0.10.12')); 
+  assert.ok(html.includes('Auralis v0.11.0'));
 });
 
 

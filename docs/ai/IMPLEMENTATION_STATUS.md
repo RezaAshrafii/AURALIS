@@ -5,23 +5,25 @@ Updated: 2026-08-14
 ## Repository checkpoint
 
 - Branch: `dev/AUR-1102-contracts`
-- Verified starting HEAD: `1ac530ee4e59e52c931313fa3b3366a06e497e87`
+- Verified AUR-1104 base HEAD: `602a55880c09681547ae9f15fc4cdfdd5191c789`
 - Rollback anchor: `1ac530ee4e59e52c931313fa3b3366a06e497e87`
-- Product baseline: v0.10.12
-- Completed: AUR-1101, AUR-1102, AUR-1103
-- Active: AUR-1104 — Source Layout + v0.11 Gate
-- Next milestone: AUR-1201 — Audio Core Domain + Persistence
+- Product version: v0.11.0 Engineering Foundation
+- Completed: AUR-1101, AUR-1102, AUR-1103, AUR-1104
+- v0.11 milestone gate: COMPLETE at the AUR-1104 commit (`head_commit: SELF` in handoff)
+- Next: AUR-1201 — Audio Core Domain + Persistence
 
 ## Deterministic baseline
 
 | Label | Command | Result |
 | --- | --- | --- |
-| UNIT / FIXTURE / source contract | `node --test "tests/*.test.mjs"` | PASS — 68 total, 57 pass, 11 skip, 0 fail |
+| UNIT / FIXTURE / source contract | `node --test "tests/*.test.mjs"` | PASS — 71 total, 60 pass, 11 skip, 0 fail |
 | Frontend typecheck | `npm run frontend:typecheck` | PASS — strict TypeScript |
 | Frontend tests | `npm run frontend:test` | PASS — 3 pass, 0 fail |
 | Frontend production build | `npm run frontend:build` | PASS — Vite 7.1.7, 25 modules |
 | INTEGRATION / local UI smoke | Source `app/` and generated `dist/web/` via trusted Bun | PASS — online UI, four primary views, zero build-console errors |
 | INTEGRATION / repository gate | `npm run verify` | PASS |
+| INTEGRATION / deterministic artifact | `npm run build:v0.11:test` | PASS — 2 identical builds, SHA-256 manifest, full suite |
+| INTEGRATION / documented launcher | `scripts/run-v011-test.ps1` with trusted Bun | PASS — health/version/index/asset checks and graceful shutdown |
 | Source hygiene | `git diff --check` | PASS |
 | REAL_WINDOWS_HARDWARE | Not run | Pending at the v0.12 hardware gate |
 
@@ -52,9 +54,8 @@ This audit is complete. Use this table for later milestones; do not repeat repos
 
 ## Immediate acceptance queue
 
-1. AUR-1104: v0.11 verification gate, compact handoff, and exact runnable test procedure.
-2. AUR-1201 through AUR-1205: production Rust audio core implementation and automated verification.
-3. AUR-1206: mandatory real Windows hardware gate. This is the next expected human-validation stop.
+1. AUR-1201 through AUR-1205: production Rust audio core implementation and automated verification.
+2. AUR-1206: mandatory real Windows hardware gate. This is the next expected human-validation stop.
 
 ## Standing risks
 

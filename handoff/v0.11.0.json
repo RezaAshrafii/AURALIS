@@ -1,0 +1,36 @@
+{
+  "version": "v0.11.0",
+  "base_commit": "28f709252582fc21f27982191c37fe786da4b700",
+  "head_commit": "SELF",
+  "implemented": [
+    "reproducible source foundation and hygiene gate",
+    "authoritative machine-tested CURRENT and TARGET/FUTURE contracts",
+    "minimal pinned React 18, strict TypeScript, and Vite workspace",
+    "shared source/UI build bridge with no aesthetic redesign",
+    "two-pass byte-identical frontend artifact verification with SHA-256 manifest",
+    "exact generated-artifact launch and manual smoke procedure",
+    "synchronized v0.11.0 source, contract, server, and UI metadata"
+  ],
+  "tests_passed": [
+    "UNIT: strict frontend TypeScript check",
+    "UNIT: frontend foundation tests — 3 pass",
+    "UNIT/FIXTURE: repository suite — 71 total, 60 pass, 11 expected skip, 0 fail",
+    "INTEGRATION: Vite production build repeated twice with identical bytes and SHA-256",
+    "INTEGRATION: repository verify gate",
+    "INTEGRATION: source UI and generated UI local smoke",
+    "INTEGRATION: documented PowerShell launcher health/version/index/asset smoke"
+  ],
+  "windows_tests_pending": [
+    "REAL_WINDOWS_HARDWARE mic-only capture",
+    "REAL_WINDOWS_HARDWARE loopback-only capture",
+    "REAL_WINDOWS_HARDWARE simultaneous mic + loopback",
+    "REAL_WINDOWS_HARDWARE right-channel-only, 44.1 kHz, and 48 kHz",
+    "REAL_WINDOWS_HARDWARE device change, crash recovery, and 20-minute capture"
+  ],
+  "known_issues": [
+    "Production Rust WASAPI, spool, VAD, and streaming ASR remain v0.12/v0.13 work.",
+    "The source test procedure uses an external trusted Bun runtime; generated runtimes are intentionally not tracked.",
+    "Rust tooling is unavailable on PATH in the current implementation environment."
+  ],
+  "next_milestone": "v0.12.0"
+}

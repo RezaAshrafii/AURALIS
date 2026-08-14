@@ -15,7 +15,7 @@ const shape = (name, fields, source) => Object.freeze({
 
 export const currentContract = Object.freeze({
   classification: 'CURRENT',
-  applicationVersion: '0.10.12',
+  applicationVersion: '0.11.0',
   implementation: Object.freeze({
     runtime: 'Bun',
     server: 'server.mjs',

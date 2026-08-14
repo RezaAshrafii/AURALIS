@@ -1,6 +1,6 @@
 {
   "name": "auralis-source-foundation",
-  "version": "0.10.12",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -12,6 +12,7 @@
     "verify": "node scripts/verify.mjs",
     "frontend:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "frontend:test": "node --test --test-isolation=none \"tests/frontend-foundation.test.mjs\"",
-    "frontend:build": "vite build --config apps/web/vite.config.ts"
+    "frontend:build": "vite build --config apps/web/vite.config.ts",
+    "build:v0.11:test": "node scripts/build-v011-test.mjs"
   }
 }

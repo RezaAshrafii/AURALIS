@@ -5,6 +5,7 @@ import process from 'node:process';
 const requiredFiles = [
   'AGENTS.md',
   'CLAUDE.md',
+  'VERSION',
   'package.json',
   'package-lock.json',
   'server.mjs',
@@ -13,12 +14,18 @@ const requiredFiles = [
   'apps/web/src/main.ts',
   'apps/web/tsconfig.json',
   'apps/web/vite.config.ts',
+  'scripts/build-v011-test.mjs',
+  'scripts/run-v011-test.ps1',
   'docs/architecture.md',
   'docs/adr/0001-incremental-source-foundation.md',
   'docs/adr/0003-incremental-vite-bridge.md',
   'docs/tasks/AUR-1101.md',
   'docs/tasks/AUR-1103.md',
+  'docs/tasks/AUR-1104.md',
+  'docs/V011_TEST_PROCEDURE.md',
   'handoff/AUR-1101.json',
+  'handoff/AUR-1104.json',
+  'handoff/v0.11.0.json',
 ];
 
 async function verifyFiles() {

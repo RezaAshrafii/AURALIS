@@ -1,6 +1,6 @@
 # AURALIS Current Architecture
 
-Last verified: 2026-08-14 at `1ac530ee4e59e52c931313fa3b3366a06e497e87` on `dev/AUR-1102-contracts`.
+Last verified: 2026-08-14 at the v0.11.0 engineering gate on `dev/AUR-1102-contracts`.
 
 This file is the compact source-of-truth for implemented architecture. It describes CURRENT behavior only. Planned behavior remains in `MASTER_ROADMAP.md` and `packages/contracts/target-future.mjs`.
 
@@ -69,3 +69,11 @@ Audio is the source of truth. Transcript, Turn, retrieval evidence, and answer r
 - Move one responsibility at a time behind a tested port; avoid a whole-repository rename or rewrite.
 - Do not treat fixtures, source inspection, or an optional probe as real Windows hardware validation.
 - Do not rescan ignored runtime, data, release, dependency, binary, captured-audio, or database content during normal milestone work.
+
+## v0.11 build and test boundary
+
+- Direct dependency versions and the complete graph are fixed by `package-lock.json` (lockfile v3).
+- `npm run build:v0.11:test` performs strict typecheck, frontend tests, two byte-identical production builds, SHA-256 manifest generation, and the complete deterministic regression suite.
+- Generated test output is `dist/web/` with `dist/v0.11-test-manifest.json`; both are ignored source artifacts.
+- `scripts/run-v011-test.ps1` serves the generated UI through the unchanged loopback API using a caller-supplied trusted Bun runtime.
+- No source-built portable archive or production native binary is claimed at v0.11.
