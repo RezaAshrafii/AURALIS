@@ -1,8 +1,19 @@
 //! Target Phase-2 audio boundary for the production Rust core.
 //!
-//! The runnable v0.10.3 validation package includes a separate Windows WASAPI probe
+//! The runnable validation package includes a separate Windows WASAPI probe
 //! so the hardware path can be exercised before this crate is built in the release toolchain.
 //! Production ownership remains here: WASAPI capture -> bounded queue -> spool -> SQLite ledger.
+
+pub mod format;
+pub mod handoff;
+pub mod lifecycle;
+pub mod persistence;
+pub mod recovery;
+pub mod spool;
+#[cfg(windows)]
+pub mod wasapi;
+#[cfg(windows)]
+pub mod windows_lifecycle;
 
 pub const DEFAULT_CHUNK_SECONDS: u32 = 5;
 pub const DEFAULT_CAPTURE_QUEUE_CAPACITY: usize = 256;

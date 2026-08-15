@@ -17,8 +17,12 @@ pub struct FrozenSpeechSegment {
 
 impl FrozenSpeechSegment {
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.seq_end <= self.seq_start { return Err("empty segment range"); }
-        if self.audio_ref.trim().is_empty() { return Err("segment must retain audio reference"); }
+        if self.seq_end <= self.seq_start {
+            return Err("empty segment range");
+        }
+        if self.audio_ref.trim().is_empty() {
+            return Err("segment must retain audio reference");
+        }
         Ok(())
     }
 }

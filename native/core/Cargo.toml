@@ -1,21 +1,33 @@
 [package]
 name = "auralis-core"
-version = "0.10.3"
+version = "0.12.0"
 edition = "2024"
 rust-version = "1.97"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 thiserror = "2"
+time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }
 axum = { version = "0.8", features = ["ws"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
+sha2 = "0.10"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 windows = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Media_Audio",
+  "Win32_Media_KernelStreaming",
+  "Win32_Media_Multimedia",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
   "Win32_System_Com",
+  "Win32_System_Com_StructuredStorage",
   "Win32_System_Performance",
-  "Win32_System_Threading"
+  "Win32_System_Power",
+  "Win32_System_Threading",
+  "Win32_System_Variant",
+  "Win32_UI_WindowsAndMessaging"
 ] }
+windows-core = "0.61"
