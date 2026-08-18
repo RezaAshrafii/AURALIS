@@ -1,0 +1,91 @@
+Auralis v0.11.2 — Runtime Auth Stabilization
+Build Verification
+============================================
+
+Scope
+-----
+This release is a stabilization patch on the v0.11.1 engineering foundation.
+It fixes the concrete failures visible in the supplied screenshots without replacing the current Audio/ASR/RAG/UI architecture.
+
+Confirmed defects fixed
+-----------------------
+1. Overall health was hard-coded to DEGRADED regardless of actual component state.
+   FIXED: overall health is now computed from current native capture / ASR / Brain failures.
+
+2. UI could show AI READY even when no valid credential had been validated.
+   FIXED: AI readiness now requires enabled runtime + credential present + non-error provider state.
+
+3. Quick Setup enabled ASR/Brain before validating Gemini access.
+   FIXED: a minimal Gemini access probe must succeed before ASR/Brain are enabled.
+
+4. 401/403 provider failures were surfaced as a generic Brain HTTP error.
+   FIXED: actionable AUTH_REQUIRED messaging is returned, provider status is retained, and provider messages are sanitized.
+
+5. Repeated ASR auth failures were rendered inside Live Transcript as fake conversation rows (e.g. AUTH_REQUIRED).
+   FIXED: Live Transcript renders only successful transcript text. Runtime failures are shown once as an explicit operational alert.
+
+6. Invalid credentials could trigger repeated automatic ASR/Brain attempts.
+   FIXED: AUTH_REQUIRED disables the affected runtime until the credential is corrected. Raw audio / failed segments remain preserved for replay.
+
+7. After credential recovery, previously frozen/failed segments and eligible unanswered turns could remain stranded.
+   FIXED: successful setup requeues pending ASR work and backfills eligible missing answers.
+
+8. Settings used nested independent card scrolling.
+   FIXED: settings now use page-level scrolling and product cards no longer own unnecessary inner scrollbars.
+
+9. Release metadata was inconsistent between health/bootstrap/test metadata.
+   FIXED: v0.11.2 reports RUNTIME_AUTH_STABILIZATION consistently while preserving the focused workspace UI.
+
+Source verification
+-------------------
+Node test suite:              75 total / 64 PASS / 0 FAIL / 11 SKIP
+Frontend TypeScript check:    PASS
+Deterministic frontend build: PASS
+npm run verify:               PASS (AURALIS_VERIFY_PASS)
+JavaScript syntax:            PASS
+
+The 11 source skips are existing Windows/native-probe or compiled-portable checks that are not executable from this Linux build environment.
+
+Portable verification
+---------------------
+Portable-safe regression:     62 total / 56 PASS / 0 FAIL / 6 SKIP
+server.mjs syntax:            PASS
+app/app-react.js syntax:      PASS
+core/provider-errors.mjs:     PASS
+runtime/bun.exe:              PE32+ x86-64
+native capture probe:         PE32+ x86-64
+spool inspector:              PE32+ x86-64
+
+Source ↔ Portable consistency
+-----------------------------
+Common product files checked: 40
+Mismatches:                   0
+
+Security checks covered by regression suite
+-------------------------------------------
+- API keys are not written to localStorage.
+- Provider error messages redact API-key-looking strings.
+- Invalid credentials do not produce a false AI READY state.
+- Invalid credentials do not become transcript/conversation content.
+
+Not executed in this environment
+--------------------------------
+- Real Windows WASAPI microphone capture
+- Real Windows system-loopback capture
+- Live Gemini authentication with the user's API key
+- Live Persian Mic → ASR → Turn → Brain flow
+- 20/60/120-minute Windows soak tests
+
+These must not be represented as PASS until run on the user's Windows machine.
+
+Expected Windows acceptance test
+--------------------------------
+1. Launch Auralis.
+2. Settings → enter Gemini API key and click Test Brain / Activate AI.
+3. With a VALID key: runtime should become ready and a short Persian microphone question should produce Transcript → Turn → Answer.
+4. With an INVALID/REVOKED key: UI should clearly report a credential/permission error, should NOT show AI READY, and should NOT create repeated AUTH_REQUIRED transcript cards.
+
+Verdict
+-------
+All concrete application defects identified from the supplied v0.11.1 screenshots have regression coverage and are fixed in the v0.11.2 source/portable artifacts.
+This is not claimed to be universally bug-free until the real Windows/Gemini acceptance test passes.

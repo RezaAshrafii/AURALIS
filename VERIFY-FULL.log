@@ -1,0 +1,394 @@
+=== AURALIS v0.11.2 PORTABLE STATIC/REGRESSION VERIFICATION ===
+UTC 2026-08-18T20:05:33Z
+
+--- node tests (portable-safe subset) ---
+TAP version 13
+# Subtest: Persian router accepts all required question/request regressions
+ok 1 - Persian router accepts all required question/request regressions
+  ---
+  duration_ms: 2.408037
+  type: 'test'
+  ...
+# Subtest: Persian router does not answer ordinary statements
+ok 2 - Persian router does not answer ordinary statements
+  ---
+  duration_ms: 0.204489
+  type: 'test'
+  ...
+# Subtest: answer parser accepts direct JSON and filters citations
+ok 3 - answer parser accepts direct JSON and filters citations
+  ---
+  duration_ms: 0.823664
+  type: 'test'
+  ...
+# Subtest: answer parser unwraps fenced JSON
+ok 4 - answer parser unwraps fenced JSON
+  ---
+  duration_ms: 0.209826
+  type: 'test'
+  ...
+# Subtest: answer parser unwraps nested JSON answer envelope
+ok 5 - answer parser unwraps nested JSON answer envelope
+  ---
+  duration_ms: 0.161405
+  type: 'test'
+  ...
+# Subtest: answer parser rejects malformed provider payload instead of leaking it
+ok 6 - answer parser rejects malformed provider payload instead of leaking it
+  ---
+  duration_ms: 0.403877
+  type: 'test'
+  ...
+# Subtest: source grounding without an allowed citation is marked unverified
+ok 7 - source grounding without an allowed citation is marked unverified
+  ---
+  duration_ms: 0.101786
+  type: 'test'
+  ...
+# Subtest: runtime grounding envelope is accepted without source citations
+ok 8 - runtime grounding envelope is accepted without source citations
+  ---
+  duration_ms: 0.097514
+  type: 'test'
+  ...
+# Subtest: immutable speech segments and transcript revisions are persisted
+ok 9 - immutable speech segments and transcript revisions are persisted
+  ---
+  duration_ms: 0.76358
+  type: 'test'
+  ...
+# Subtest: ASR keeps Google STT target plus explicit Gemini validation adapter
+ok 10 - ASR keeps Google STT target plus explicit Gemini validation adapter
+  ---
+  duration_ms: 0.286141
+  type: 'test'
+  ...
+# Subtest: raw capture path stays independent from VAD analysis
+ok 11 - raw capture path stays independent from VAD analysis # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.536693
+  type: 'test'
+  ...
+# Subtest: loopback silent advances are not mislabeled as loss
+ok 12 - loopback silent advances are not mislabeled as loss # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.091921
+  type: 'test'
+  ...
+# Subtest: derived VAD emits frozen segments and band-limited WAV
+ok 13 - derived VAD emits frozen segments and band-limited WAV # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.072321
+  type: 'test'
+  ...
+# Subtest: React UI exposes selectable Turn cards and bound inspector
+ok 14 - React UI exposes selectable Turn cards and bound inspector
+  ---
+  duration_ms: 0.456702
+  type: 'test'
+  ...
+# Subtest: turn detail endpoint binds segments and answers to exact turn
+ok 15 - turn detail endpoint binds segments and answers to exact turn
+  ---
+  duration_ms: 0.215227
+  type: 'test'
+  ...
+# Subtest: credentials remain RAM-only in the current behavior contract
+ok 16 - credentials remain RAM-only in the current behavior contract
+  ---
+  duration_ms: 0.128707
+  type: 'test'
+  ...
+# Subtest: visible live transcript remains independent from Turn cards
+ok 17 - visible live transcript remains independent from Turn cards
+  ---
+  duration_ms: 0.29385
+  type: 'test'
+  ...
+# Subtest: quick setup activates audio transcription and text brain with explicit key
+ok 18 - quick setup activates audio transcription and text brain with explicit key
+  ---
+  duration_ms: 0.286763
+  type: 'test'
+  ...
+# Subtest: pending frozen segments are queued after ASR enable
+ok 19 - pending frozen segments are queued after ASR enable
+  ---
+  duration_ms: 0.388368
+  type: 'test'
+  ...
+# Subtest: validation VAD exposes level telemetry
+ok 20 - validation VAD exposes level telemetry # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.057237
+  type: 'test'
+  ...
+# Subtest: WAVEFORMATEXTENSIBLE parser uses byte offsets
+ok 21 - WAVEFORMATEXTENSIBLE parser uses byte offsets # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.033305
+  type: 'test'
+  ...
+# Subtest: React UI polling is non-overlapping
+ok 22 - React UI polling is non-overlapping
+  ---
+  duration_ms: 0.069071
+  type: 'test'
+  ...
+# Subtest: portable UI uses locally vendored React 18 and createRoot
+ok 23 - portable UI uses locally vendored React 18 and createRoot
+  ---
+  duration_ms: 1.317627
+  type: 'test'
+  ...
+# Subtest: React \#191 navigation regression cannot recur
+ok 24 - React \#191 navigation regression cannot recur
+  ---
+  duration_ms: 0.214972
+  type: 'test'
+  ...
+# Subtest: all product sections remain directly reachable
+ok 25 - all product sections remain directly reachable
+  ---
+  duration_ms: 0.455926
+  type: 'test'
+  ...
+# Subtest: session workspace exposes controls, durable cycle, history and activity
+ok 26 - session workspace exposes controls, durable cycle, history and activity
+  ---
+  duration_ms: 0.351556
+  type: 'test'
+  ...
+# Subtest: session context is persisted and passed to text-only Brain
+ok 27 - session context is persisted and passed to text-only Brain
+  ---
+  duration_ms: 0.346738
+  type: 'test'
+  ...
+# Subtest: audio inputs default to simultaneous mic and loopback
+ok 28 - audio inputs default to simultaneous mic and loopback
+  ---
+  duration_ms: 0.319543
+  type: 'test'
+  ...
+# Subtest: UI never stores API keys in localStorage
+ok 29 - UI never stores API keys in localStorage
+  ---
+  duration_ms: 0.238514
+  type: 'test'
+  ...
+# Subtest: object-valued API fields are normalized before component rendering
+ok 30 - object-valued API fields are normalized before component rendering
+  ---
+  duration_ms: 0.144277
+  type: 'test'
+  ...
+# Subtest: closed sessions are immutable and persisted JSON cannot crash answer rendering
+ok 31 - closed sessions are immutable and persisted JSON cannot crash answer rendering
+  ---
+  duration_ms: 0.600829
+  type: 'test'
+  ...
+# Subtest: responsive navigation remains visible and layouts collapse cleanly
+ok 32 - responsive navigation remains visible and layouts collapse cleanly
+  ---
+  duration_ms: 0.574311
+  type: 'test'
+  ...
+# Subtest: low-level telemetry stays out of the central conversation column
+ok 33 - low-level telemetry stays out of the central conversation column
+  ---
+  duration_ms: 0.314881
+  type: 'test'
+  ...
+# Subtest: release metadata identifies runtime auth stabilization while preserving focused workspace UI
+ok 34 - release metadata identifies runtime auth stabilization while preserving focused workspace UI
+  ---
+  duration_ms: 0.150363
+  type: 'test'
+  ...
+# Subtest: Z hotkey answers selected or latest eligible turn and never fires while typing
+ok 35 - Z hotkey answers selected or latest eligible turn and never fires while typing
+  ---
+  duration_ms: 0.113018
+  type: 'test'
+  ...
+# Subtest: eligible answers are prepared in background and selection only displays stored result
+ok 36 - eligible answers are prepared in background and selection only displays stored result
+  ---
+  duration_ms: 0.135864
+  type: 'test'
+  ...
+# Subtest: manual text turns join the same auto-answer policy when mode allows it
+ok 37 - manual text turns join the same auto-answer policy when mode allows it
+  ---
+  duration_ms: 0.26836
+  type: 'test'
+  ...
+# Subtest: focused workspace remains the active desktop layout without a visible technical rail
+ok 38 - focused workspace remains the active desktop layout without a visible technical rail
+  ---
+  duration_ms: 0.174734
+  type: 'test'
+  ...
+# Subtest: mode hints explain automatic answer ownership
+ok 39 - mode hints explain automatic answer ownership
+  ---
+  duration_ms: 0.081659
+  type: 'test'
+  ...
+# Subtest: Oral Copilot mic-only request is automatically answerable
+ok 40 - Oral Copilot mic-only request is automatically answerable
+  ---
+  duration_ms: 0.663021
+  type: 'test'
+  ...
+# Subtest: focused desktop workspace keeps main session free of narrow technical rails
+ok 41 - focused desktop workspace keeps main session free of narrow technical rails
+  ---
+  duration_ms: 0.315296
+  type: 'test'
+  ...
+# Subtest: main session workspace no longer renders pipeline/history rail or duplicated Q&A list
+ok 42 - main session workspace no longer renders pipeline/history rail or duplicated Q&A list
+  ---
+  duration_ms: 0.637717
+  type: 'test'
+  ...
+# Subtest: recent sessions and conversation history are accessible as overlays
+ok 43 - recent sessions and conversation history are accessible as overlays
+  ---
+  duration_ms: 0.539832
+  type: 'test'
+  ...
+# Subtest: live transcript is transcription-only newest-first and has no horizontal carousel
+ok 44 - live transcript is transcription-only newest-first and has no horizontal carousel
+  ---
+  duration_ms: 0.179939
+  type: 'test'
+  ...
+# Subtest: automatic answer generation remains server-owned and selection remains display-only
+ok 45 - automatic answer generation remains server-owned and selection remains display-only
+  ---
+  duration_ms: 1.811946
+  type: 'test'
+  ...
+# Subtest: processing cycle remains available in System diagnostics
+ok 46 - processing cycle remains available in System diagnostics
+  ---
+  duration_ms: 0.218062
+  type: 'test'
+  ...
+# Subtest: meeting/oral ownership policy adapts safely when system audio is disabled
+ok 47 - meeting/oral ownership policy adapts safely when system audio is disabled
+  ---
+  duration_ms: 1.150042
+  type: 'test'
+  ...
+# Subtest: runtime audio capability questions bypass source hallucination
+ok 48 - runtime audio capability questions bypass source hallucination
+  ---
+  duration_ms: 1.408613
+  type: 'test'
+  ...
+# Subtest: ASR retry stays persisted with bounded attempts and backoff
+ok 49 - ASR retry stays persisted with bounded attempts and backoff
+  ---
+  duration_ms: 0.269496
+  type: 'test'
+  ...
+# Subtest: segment audio can be retranscribed without duplicate turn
+ok 50 - segment audio can be retranscribed without duplicate turn
+  ---
+  duration_ms: 0.440002
+  type: 'test'
+  ...
+# Subtest: max-duration segmentation preserves one second overlap
+ok 51 - max-duration segmentation preserves one second overlap # SKIP native-probe source is not shipped in the Portable package
+  ---
+  duration_ms: 0.203214
+  type: 'test'
+  ...
+# Subtest: Gemini authentication failures are actionable and do not masquerade as generic HTTP errors
+ok 52 - Gemini authentication failures are actionable and do not masquerade as generic HTTP errors
+  ---
+  duration_ms: 1.669582
+  type: 'test'
+  ...
+# Subtest: provider error sanitizer redacts API-key-looking material
+ok 53 - provider error sanitizer redacts API-key-looking material
+  ---
+  duration_ms: 0.274432
+  type: 'test'
+  ...
+# Subtest: runtime readiness requires enabled state and a configured credential
+ok 54 - runtime readiness requires enabled state and a configured credential
+  ---
+  duration_ms: 0.371271
+  type: 'test'
+  ...
+# Subtest: overall health is no longer permanently hard-coded degraded
+ok 55 - overall health is no longer permanently hard-coded degraded
+  ---
+  duration_ms: 0.29382
+  type: 'test'
+  ...
+# Subtest: quick setup validates Gemini before enabling ASR and Brain
+ok 56 - quick setup validates Gemini before enabling ASR and Brain
+  ---
+  duration_ms: 0.204616
+  type: 'test'
+  ...
+# Subtest: authentication failure stops repeated automatic ASR attempts while preserving failed segments for replay
+ok 57 - authentication failure stops repeated automatic ASR attempts while preserving failed segments for replay
+  ---
+  duration_ms: 0.168582
+  type: 'test'
+  ...
+# Subtest: authentication failure stops repeated Brain auto-answer attempts and later setup can backfill unanswered turns
+ok 58 - authentication failure stops repeated Brain auto-answer attempts and later setup can backfill unanswered turns
+  ---
+  duration_ms: 1.066201
+  type: 'test'
+  ...
+# Subtest: main Live Transcript renders only successful transcript text, not ASR errors as conversation
+ok 59 - main Live Transcript renders only successful transcript text, not ASR errors as conversation
+  ---
+  duration_ms: 0.271987
+  type: 'test'
+  ...
+# Subtest: AI READY in UI requires actual credential-bearing healthy runtime state
+ok 60 - AI READY in UI requires actual credential-bearing healthy runtime state
+  ---
+  duration_ms: 0.506934
+  type: 'test'
+  ...
+# Subtest: settings use page-level scrolling instead of independent nested card scrollbars
+ok 61 - settings use page-level scrolling instead of independent nested card scrollbars
+  ---
+  duration_ms: 0.499103
+  type: 'test'
+  ...
+# Subtest: release metadata identifies v0.11.2 stabilization patch
+ok 62 - release metadata identifies v0.11.2 stabilization patch
+  ---
+  duration_ms: 0.200849
+  type: 'test'
+  ...
+1..62
+# tests 62
+# suites 0
+# pass 56
+# fail 0
+# cancelled 0
+# skipped 6
+# todo 0
+# duration_ms 285.609095
+
+--- syntax ---
+SYNTAX_PASS
+
+--- Windows PE inspection ---
+runtime/bun.exe:                  PE32+ executable for MS Windows 6.00 (console), x86-64, 11 sections
+native/auralis-capture-probe.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections
+native/auralis-spool-inspect.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 8 sections

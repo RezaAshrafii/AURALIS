@@ -1,0 +1,3 @@
+Auralis v0.10.12 — source/build note
+
+This milestone intentionally changes UI/state presentation while preserving the existing Audio/ASR/Turn/RAG/Brain behavior contracts.

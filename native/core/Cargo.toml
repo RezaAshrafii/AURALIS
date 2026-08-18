@@ -1,0 +1,21 @@
+[package]
+name = "auralis-core"
+version = "0.10.3"
+edition = "2024"
+rust-version = "1.97"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }
+axum = { version = "0.8", features = ["ws"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Media_Audio",
+  "Win32_System_Com",
+  "Win32_System_Performance",
+  "Win32_System_Threading"
+] }
