@@ -48,3 +48,10 @@ test('source grounding without an allowed citation is marked unverified', () => 
   const out = parseAnswerEnvelope('{"answer":"پاسخ","sourceChunkIds":["fake"],"grounding":"source"}', new Set(['real']));
   assert.equal(out.grounding, 'grounding_unverified');
 });
+
+
+test('runtime grounding envelope is accepted without source citations', () => {
+  const out = parseAnswerEnvelope(JSON.stringify({answer:'این Turn از میکروفون رونویسی شده است.',sourceChunkIds:[],grounding:'runtime'}), new Set());
+  assert.equal(out.grounding, 'runtime');
+  assert.equal(out.sourceChunkIds.length, 0);
+});

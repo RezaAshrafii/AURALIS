@@ -1,5 +1,14 @@
-# Rust production core status — v0.10.5 validation build
+# Rust Core Build Status — v0.12.0
 
-The production architecture still targets Rust stable + windows-rs. This execution environment does not contain cargo/rustc, so no Rust production binary is claimed.
+Source milestone: implemented.
 
-The bundled Windows validation probe is cross-built from audited Go source to make real WASAPI capture, format decoding, VAD segmentation and ASR integration testable now. v0.10.5 fixes the Windows WAVEFORMATEXTENSIBLE alignment failure discovered in real user testing.
+Current build environment: Rust toolchain unavailable, therefore Rust compilation is not claimed here.
+
+On Windows run:
+
+```powershell
+BUILD-V012-RUST-CORE.cmd
+RUN-V012-QUICK-HARDWARE-GATE.cmd
+```
+
+The core becomes hardware-validated only after the real Windows gate passes. The interactive product path remains on the validated event-producing bridge until v0.13 adds the production speech/event bridge.

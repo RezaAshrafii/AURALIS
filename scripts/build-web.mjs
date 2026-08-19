@@ -1,0 +1,12 @@
+import { cp, mkdir, rm, readFile, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT=resolve(fileURLToPath(new URL('..', import.meta.url)));
+const source=join(ROOT,'app');
+const out=join(ROOT,'dist','web');
+await rm(out,{recursive:true,force:true});
+await mkdir(out,{recursive:true});
+await cp(source,out,{recursive:true});
+const version=(await readFile(join(ROOT,'VERSION'),'utf8')).trim();
+await writeFile(join(out,'build.json'),JSON.stringify({version,builtAt:new Date().toISOString(),source:'app'},null,2)+'\n');
+console.log(`web build staged: ${out}`);

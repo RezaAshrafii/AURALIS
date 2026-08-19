@@ -1,4 +1,4 @@
-Auralis v0.10.3 Native Capture markers
+Auralis Native Capture markers
 
 برای تست میکروفون این جمله‌ها را با فاصله بخوان:
 00:00 «آغاز تست ضبط نیتیو آوالیس»

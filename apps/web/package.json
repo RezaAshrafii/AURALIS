@@ -1,0 +1,6 @@
+{
+  "name": "@auralis/web",
+  "version": "0.11.2",
+  "private": true,
+  "type": "module"
+}

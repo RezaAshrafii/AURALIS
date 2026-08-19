@@ -1,43 +1,89 @@
-Auralis v0.10.5 Audio Path Hardening — Build Verification
-=========================================================
-Version: 0.10.5-audio-path-hardening.1
-Release class: AUDIO_PATH_HARDENING_VALIDATION
+AURALIS v0.12.0 — BUILD VERIFICATION
+====================================
 
-Verified in build environment
------------------------------
-- JavaScript syntax: PASS
-- Node contract/regression tests: 29/29 PASS
-- Go audio-format/native-probe tests: PASS
-  * WAVEFORMATEXTENSIBLE exact-offset recognition
-  * right-channel-only float32 downmix
-  * PCM16 decoding
-- Windows cross-build of capture probe: PASS (PE32+ x86-64)
-- Windows cross-build of spool inspector: PASS (PE32+ x86-64)
-- DOM references: 79 IDs / 75 references / 0 missing
-- API-key localStorage scan: PASS
-- WAVEFORMATEXTENSIBLE offset contract: PASS
-- Non-overlapping UI polling contract: PASS
-- Completed-ledger startup replay skip: PASS
-- Native encoding/RMS/VAD telemetry contract: PASS
-- Source/Portable shared files: 47 / 0 mismatches
+Milestone:
+  Production Audio Core
 
-Concrete fixes over v0.10.4
----------------------------
-1. The Go probe no longer casts the WAVEFORMATEXTENSIBLE extension through a padded Go struct. Extension fields are parsed at Windows offsets 18/20/24.
-2. Derived audio supports float32/float64/PCM16/PCM24/PCM32 and preserves all channels before safe mono derivation.
-3. Unsupported/failed audio decode becomes visible telemetry instead of silently starving VAD.
-4. UI shows encoding, RMS, threshold and voice state.
-5. Polling cannot overlap; unchanged Health/Turn/Transcript DOM is not rebuilt.
-6. Completed historical ledgers are not replayed on every launch.
-7. The native probe is prewarmed in the background on Windows.
-8. Session/capture startup latency is measured in the UI.
+Baseline:
+  v0.11.2 Runtime/Auth Stabilization
 
-Not verified / not claimed
---------------------------
-- Real Windows microphone -> VAD -> Segment -> Gemini ASR execution (requires the user's Windows hardware/API key).
-- Real Windows system loopback -> text.
-- 20/60/120 minute release soak gates.
-- Final Rust/windows-rs production core (cargo/rustc unavailable in this build environment).
-- Neural VAD / dedicated streaming partial+stable-prefix ASR / whisper.cpp worker.
+Implemented in source:
+  - Rust auralis-core v0.12.0
+  - direct Windows WASAPI capture contracts
+  - microphone + system loopback capture paths
+  - event-driven capture contract
+  - bounded capture handoff queue
+  - dropped-buffer / dropped-sample accounting
+  - append-only raw spool
+  - SHA-256 + sequence range integrity
+  - SQLite WAL audio ledger
+  - lifecycle / device interruption persistence
+  - crash/recovery scan and resume cursors
+  - real-Windows mic/loopback/both hardware-gate runner
+  - capture-summary verifier
+  - quick 60/60/120 second gate launcher
+  - 20-minute simultaneous-capture gate launcher
 
-This build must not be described as flawless, stable or release-candidate until the real Windows tests above pass.
+Preserved deliberately:
+  - existing focused UI and interaction model
+  - current validated live transcript bridge
+  - Turn isolation / ownership
+  - Auto Answer + Hotkey Z
+  - RAG / citation validation
+  - Gemini credential preflight and actionable auth failures
+
+Important integration rule:
+  The Rust v0.12 hardware runner is NOT silently promoted into the interactive
+  Live Transcript path. v0.13 must add the production Neural-VAD / Streaming-ASR
+  event bridge before that migration. This prevents a native-core milestone from
+  regressing the working transcript/answer flow.
+
+Executed in this environment:
+  Source Node regression suite:
+    tests   85
+    pass    74
+    fail    0
+    skipped 11
+
+  Portable Node regression suite:
+    tests   85
+    pass    75
+    fail    0
+    skipped 10
+
+  npm run verify:             PASS (AURALIS_VERIFY_PASS)
+  frontend TypeScript check: PASS
+  frontend deterministic build: PASS
+  server.mjs syntax:         PASS
+  app-react.js syntax:       PASS
+  provider-errors.mjs syntax: PASS
+
+  Source <-> Portable common-file comparison:
+    shared files: 94
+    mismatches:   0
+
+  Windows binaries already shipped in Portable:
+    runtime/bun.exe                  PE32+ x86-64
+    native/auralis-capture-probe.exe PE32+ x86-64
+    native/auralis-spool-inspect.exe PE32+ x86-64
+
+NOT executed / NOT claimed:
+  - cargo fmt / clippy / cargo test
+  - Rust Windows release build
+  - real microphone capture through Rust core
+  - real system-loopback capture through Rust core
+  - 20-minute Windows hardware gate
+  - 120-minute release soak
+
+Reason:
+  This build environment has no rustc/cargo and is not a real Windows audio host.
+
+Required Windows validation:
+  1) BUILD-V012-RUST-CORE.cmd
+  2) RUN-V012-QUICK-HARDWARE-GATE.cmd
+  3) RUN-V012-20MIN-HARDWARE-GATE.cmd
+
+Promotion criterion:
+  v0.12 hardware PASS may only be claimed after the real-Windows summaries show
+  durable sequences > 0, dropped samples/buffers = 0 and unknown gaps = 0 for the
+  required uninterrupted acceptance runs.

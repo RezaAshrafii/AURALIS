@@ -6,7 +6,7 @@ export class AnswerSchemaError extends Error {
   }
 }
 
-const allowedGrounding = new Set(['source', 'mixed', 'general', 'insufficient']);
+const allowedGrounding = new Set(['source', 'mixed', 'general', 'insufficient', 'runtime']);
 
 function stripFence(value) {
   return String(value || '')
