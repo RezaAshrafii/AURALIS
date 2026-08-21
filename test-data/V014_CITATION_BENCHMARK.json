@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "thresholds": {
+    "minimumPrecision": 1,
+    "minimumQuoteCoverage": 1
+  },
+  "cases": [
+    {
+      "id": "fa-exact-quote",
+      "evidence": [
+        { "chunkId": "stats:1", "title": "آمار", "text": "واریانس میانگین مربع فاصله داده‌ها از میانگین است." }
+      ],
+      "citations": [
+        { "chunkId": "stats:1", "quote": "واریانس میانگین مربع فاصله داده‌ها از میانگین است" }
+      ],
+      "expectedChunkIds": ["stats:1"]
+    },
+    {
+      "id": "fa-normalized-characters",
+      "evidence": [
+        { "chunkId": "ml:2", "title": "یادگیری ماشین", "text": "یادگیری نظارت‌شده از داده‌های برچسب‌دار استفاده می‌کند." }
+      ],
+      "citations": [
+        { "chunkId": "ml:2", "quote": "یادگيري نظارت‌شده از داده‌هاي برچسب‌دار استفاده مي‌كند" }
+      ],
+      "expectedChunkIds": ["ml:2"]
+    },
+    {
+      "id": "reject-fabricated-and-unknown",
+      "evidence": [
+        { "chunkId": "db:3", "title": "پایگاه داده", "text": "WAL ثبت تراکنش را پیش از اعمال روی فایل اصلی نگه می‌دارد." }
+      ],
+      "citations": [
+        { "chunkId": "db:3", "quote": "این نقل قول در متن وجود ندارد" },
+        { "chunkId": "unknown:9", "quote": "هر متن ساختگی" }
+      ],
+      "expectedChunkIds": []
+    }
+  ]
+}
