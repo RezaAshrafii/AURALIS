@@ -53,14 +53,14 @@
     constructor(props){
       super(props);
       this.state={
-        token:'',version:'0.12.0',view:'session',theme:lsGet('theme','dark'),connection:'booting',
+        token:'',version:'0.13.0',view:'session',theme:lsGet('theme','dark'),connection:'booting',
         health:null,metrics:null,native:null,asr:null,brainRuntime:null,
         sessions:[],sessionId:null,activeSessionId:null,sessionActive:false,currentSession:null,
         mode:lsGet('mode','oral_copilot'),mic:lsGet('mic',true),loopback:lsGet('loopback',true),chunkSeconds:Number(lsGet('chunkSeconds',5)),
         contextText:lsGet('contextText',''),responseStyle:lsGet('responseStyle','concise'),
         turns:[],transcripts:[],gaps:[],activity:[],selectedTurnId:null,selectedDetail:null,inspectorPinned:false,
         sources:[],retrieveResults:[],retrieveQuery:'',sourceTitle:'منبع جدید',sourceText:'',sourceFileName:'',
-        apiKey:'',model:lsGet('model','gemini-3.1-flash-lite'),strictSource:lsGet('strictSource',true),autoAnswer:lsGet('autoAnswer',true),
+        apiKey:'',model:lsGet('model','gemini-3.1-flash-lite'),strictSource:lsGet('strictSource',true),autoAnswer:lsGet('autoAnswer',true),localAsrEnabled:lsGet('localAsrEnabled',false),localAsrUrl:lsGet('localAsrUrl','http://127.0.0.1:8080'),
         manualText:'',busySession:false,busyRuntime:false,busyManual:false,busySource:false,busyAnswer:false,busySettings:false,
         notice:null,lastSyncAt:null,conversationOpen:false,sessionsOpen:false,transcriptArchiveOpen:false
       };
@@ -108,7 +108,7 @@
         if(!response.ok)throw new Error('Bootstrap HTTP '+response.status);
         var bootstrap=await response.json();
         this.token=String(bootstrap.token||'');
-        this.setState({token:this.token,version:String(bootstrap.version||'0.12.0')});
+        this.setState({token:this.token,version:String(bootstrap.version||'0.13.0')});
         var sessionData=await this.refreshSessions();
         await Promise.all([this.refreshHealth(),this.refreshNative(),this.refreshRuntime(),this.refreshMetrics(),this.refreshSources()]);
         var sessions=sessionData&&sessionData.sessions||[];
@@ -141,7 +141,7 @@
       this.setState({native:data,activeSessionId:active?data.sessionId:null,sessionActive:active});
       return data;
     }
-    async refreshRuntime(){var data=await this.api('/v1/asr/status');this.setState({asr:data});return data;}
+    async refreshRuntime(){var data=await this.api('/v1/asr/status');var local=data&&data.localFallback||{};this.setState({asr:data,localAsrEnabled:Boolean(local.enabled),localAsrUrl:text(local.baseUrl,this.state.localAsrUrl)});return data;}
     async refreshSources(){try{var data=await this.api('/v1/sources');this.setState({sources:data.sources||[]});return data;}catch(error){return null;}}
     async refreshSessions(){
       var data=await this.api('/v1/sessions?limit=24');
@@ -312,6 +312,24 @@
       finally{this.setState({busyRuntime:false});}
     }
 
+    async saveLocalAsr(){
+      this.setState({busyRuntime:true});
+      try{
+        var data=await this.api('/v1/asr/local-config',{method:'POST',body:JSON.stringify({enabled:this.state.localAsrEnabled,baseUrl:this.state.localAsrUrl,language:'fa',model:'whisper.cpp-local'})});
+        lsSet('localAsrEnabled',this.state.localAsrEnabled);lsSet('localAsrUrl',this.state.localAsrUrl);
+        await Promise.all([this.refreshRuntime(),this.refreshHealth()]);
+        this.setNotice(data.enabled?'Fallback محلی whisper.cpp فعال شد.':'Fallback محلی غیرفعال شد.','success');
+      }catch(error){this.setNotice('تنظیم ASR محلی ناموفق: '+error.message,'danger');}
+      finally{this.setState({busyRuntime:false});}
+    }
+
+    async probeLocalAsr(){
+      this.setState({busyRuntime:true});
+      try{var data=await this.api('/v1/asr/local-probe',{method:'POST',body:JSON.stringify({baseUrl:this.state.localAsrUrl})});this.setNotice('whisper.cpp روی loopback در دسترس است · '+text(data.latencyMs,0)+' ms','success');}
+      catch(error){this.setNotice('whisper.cpp محلی در دسترس نیست: '+error.message,'warning');}
+      finally{this.setState({busyRuntime:false});}
+    }
+
     async testBrain(){
       if(!this.state.apiKey.trim()){this.setNotice('API Key لازم است.','warning');return;}
       this.setState({busyRuntime:true});
@@ -448,7 +466,7 @@
       var healthStatus=text(this.state.health&&this.state.health.status,'connecting').toUpperCase();
       var healthTone=toneForState(healthStatus);
       return h('header',{className:'appbar'},
-        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.12.0 · Production Audio Core'))),
+        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.13.0 · Speech Engine Reliability'))),
         h('nav',{className:'top-nav','aria-label':'بخش‌های برنامه'},NAV_ITEMS.map(function(item){
           var active=this.state.view===item.value;
           return h('button',{key:item.value,type:'button',className:'nav-item'+(active?' active':''),onClick:function(){this.setState({view:item.value});}.bind(this),'aria-current':active?'page':undefined},h('span',null,item.label),h('small',null,item.caption));
@@ -601,7 +619,18 @@
         h(Field,{label:'Gemini API Key'},
           h('input',{className:'modern-input ltr',type:'password',value:this.state.apiKey,onChange:function(event){this.setState({apiKey:event.target.value});}.bind(this),placeholder:'AIza…',autoComplete:'off',spellCheck:false})
         ),
-        h('div',{className:'security-note'},'این build از Gemini Audio به‌عنوان adapter آزمایشی استفاده می‌کند؛ ضبط صوت و ledger با قطع یا quota شدن مدل متوقف نمی‌شوند.'),
+        h('div',{className:'security-note'},'این build از Gemini Audio به‌عنوان adapter اولیه استفاده می‌کند؛ ضبط صوت و ledger با قطع یا quota شدن مدل متوقف نمی‌شوند.'),
+        h('div',{className:'setting-row'},
+          h('div',null,h('strong',null,'Fallback محلی whisper.cpp'),h('span',null,'در خطای Cloud، فقط به سرویس loopback محلی سوییچ می‌کند.')),
+          h('input',{type:'checkbox',className:'form-check-input switch-input',checked:this.state.localAsrEnabled,onChange:function(event){this.setState({localAsrEnabled:event.target.checked});}.bind(this)})
+        ),
+        h(Field,{label:'آدرس whisper.cpp',help:'فقط http://127.0.0.1، localhost یا ::1 پذیرفته می‌شود.'},
+          h('input',{className:'modern-input ltr',value:this.state.localAsrUrl,onChange:function(event){this.setState({localAsrUrl:event.target.value});}.bind(this),placeholder:'http://127.0.0.1:8080'})
+        ),
+        h('div',{className:'settings-actions'},
+          h(Button,{variant:'soft',tone:'neutral',loading:this.state.busyRuntime,onClick:this.saveLocalAsr.bind(this)},'ذخیره ASR محلی'),
+          h(Button,{variant:'soft',tone:'neutral',loading:this.state.busyRuntime,onClick:this.probeLocalAsr.bind(this)},'تست whisper.cpp')
+        ),
         runtimeError?h('div',{className:'runtime-settings-alert'},h('strong',null,'AI فعال نیست'),h('span',null,runtimeError)):null,
         h('div',{className:'setting-row'},
           h('div',null,h('strong',null,'اتکا به منابع'),h('span',null,'استناد خارج از قطعه‌های بازیابی‌شده رد می‌شود.')),

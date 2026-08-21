@@ -21,11 +21,11 @@
     'session.started':'جلسه ایجاد شد','session.closed':'جلسه پایان یافت','session.settings_updated':'تنظیمات جلسه ذخیره شد',
     'native.capture.started':'ضبط صوت شروع شد','native.capture.stopped':'ضبط صوت متوقف شد','native.capture.channel_started':'کانال صوتی فعال شد',
     'native.audio.gap_detected':'شکاف صوتی ثبت شد','audio.chunk.closed':'بخش صوتی ذخیره شد','segment.frozen':'قطعهٔ گفتار تثبیت شد',
-    'asr.started':'رونویسی شروع شد','asr.retry_scheduled':'تلاش مجدد ASR زمان‌بندی شد','asr.failed':'رونویسی ناموفق بود',
-    'transcript.final':'متن نهایی ثبت شد','transcript.empty':'گفتاری تشخیص داده نشد','turn.committed':'Turn جدید ثبت شد',
+    'asr.started':'رونویسی شروع شد','asr.retry_scheduled':'تلاش مجدد ASR زمان‌بندی شد','asr.failed':'رونویسی ناموفق بود','asr.fallback_started':'Fallback محلی شروع شد','asr.fallback_completed':'Fallback محلی موفق بود','asr.fallback_failed':'Fallback محلی ناموفق بود',
+    'transcript.partial':'متن موقت ثبت شد','transcript.stable':'متن پایدار ثبت شد','transcript.final':'متن نهایی ثبت شد','transcript.empty':'گفتاری تشخیص داده نشد','turn.committed':'Turn جدید ثبت شد',
     'turn.transcript_revised':'متن Turn بازبینی شد','answer.queued':'پاسخ در صف قرار گرفت','answer.completed':'پاسخ آماده شد',
     'answer.failed':'ساخت پاسخ ناموفق بود','answer.policy_skipped':'پاسخ طبق سیاست جلسه ارسال نشد','source.indexed':'منبع ایندکس شد',
-    'runtime.quick_setup':'AI فعال شد','asr.config_changed':'تنظیمات ASR تغییر کرد','brain.runtime_config_changed':'تنظیمات Brain تغییر کرد'
+    'runtime.quick_setup':'AI فعال شد','asr.config_changed':'تنظیمات ASR تغییر کرد','asr.local_config_changed':'تنظیم ASR محلی تغییر کرد','brain.runtime_config_changed':'تنظیمات Brain تغییر کرد'
   };
 
   function lsGet(key,fallback){try{var v=localStorage.getItem('auralis.ui.'+key);return v==null?fallback:JSON.parse(v);}catch(e){return fallback;}}

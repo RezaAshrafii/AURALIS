@@ -22,6 +22,10 @@ export function reduceRuntimeEvent(state: RuntimeState, event: RuntimeEvent): Ru
       state.health = event.payload;
       break;
     case 'transcript.partial':
+    case 'transcript.stable':
+      // Streaming revisions are transient/protocol events. Canonical final
+      // transcript revisions remain the durable UI store for this foundation.
+      break;
     case 'transcript.final': {
       const current = state.transcriptBySegment.get(event.payload.segmentId);
       if (!current || event.payload.revision >= current.revision) {

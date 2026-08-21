@@ -344,7 +344,7 @@ mod tests {
                 id: SessionId(9),
                 started_at_utc: "2026-08-15T00:00:00Z".into(),
                 ended_at_utc: None,
-                app_version: "0.12.0-test".into(),
+                app_version: "0.13.0-test".into(),
                 schema_version: 4,
                 capture_state: CaptureState::Capturing,
                 recovery_state: RecoveryState::Clean,
