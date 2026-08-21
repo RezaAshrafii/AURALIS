@@ -11,8 +11,11 @@ test('shared contracts cover durable audio-to-answer entities',()=>{
 });
 
 test('typed runtime reducer binds final answers by immutable turn id',()=>{
-  assert.ok(store.includes("state.answers.set(event.payload.turnId, event.payload)"));
-  assert.ok(store.includes("state.turns.set(event.payload.id, event.payload)"));
+  assert.ok(store.includes('const answers = new Map(state.answers)'));
+  assert.ok(store.includes('answers.set(event.payload.turnId, event.payload)'));
+  assert.ok(store.includes('return { ...state, answers }'));
+  assert.ok(store.includes('const turns = new Map(state.turns)'));
+  assert.ok(store.includes('turns.set(event.payload.id, event.payload)'));
 });
 
 test('verification and deterministic web build are first-class scripts',()=>{

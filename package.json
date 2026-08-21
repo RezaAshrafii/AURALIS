@@ -1,15 +1,21 @@
 {
   "name": "auralis-source-foundation",
-  "version": "0.13.0",
+  "version": "0.14.1",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22",
+    "bun": ">=1.2"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
+    "start": "bun server.mjs",
     "test": "node --test \"tests/*.test.mjs\"",
     "verify": "node scripts/verify.mjs",
+    "runtime:check": "node --check server.mjs",
     "frontend:typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "frontend:test": "node --test \"tests/frontend-foundation.test.mjs\"",
     "frontend:build": "node scripts/build-web.mjs",
@@ -19,7 +25,13 @@
     "audio-core:clippy": "cargo clippy --manifest-path native/Cargo.toml --workspace --all-targets --locked -- -D warnings",
     "audio-core:test": "cargo test --manifest-path native/Cargo.toml --workspace --locked",
     "speech:test": "node --test \"tests/v013-speech-engine.test.mjs\"",
+    "intelligence:test": "node --test \"tests/v014-intelligence-layer.test.mjs\"",
+    "intelligence:benchmark": "node scripts/run-v014-benchmarks.mjs",
+    "intelligence:gate": "npm run intelligence:test && npm run intelligence:benchmark && npm run frontend:typecheck && npm run frontend:build",
+    "intelligence:gate:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v014-intelligence-gate.ps1",
     "speech:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v013-speech-gate.ps1",
     "build:v0.13:windows-test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v013-windows-speech-test.ps1"
+    ,"build:v0.14:windows-bridge": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v014-windows-product-bridge.ps1"
+    ,"audio-bridge:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v014-product-bridge-gate.ps1"
   }
 }

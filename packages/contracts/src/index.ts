@@ -1,7 +1,7 @@
 export type SessionMode = 'study' | 'oral_copilot' | 'meeting' | 'mock_oral_exam';
 export type SourceRole = 'user' | 'system' | 'manual' | 'auralis';
 export type TurnKind = 'question' | 'request' | 'statement' | 'answer';
-export type GroundingState = 'source' | 'mixed' | 'general' | 'insufficient' | 'runtime';
+export type GroundingState = 'source' | 'mixed' | 'general' | 'insufficient' | 'runtime' | 'grounding_unverified';
 export type HealthState = 'UNKNOWN' | 'READY' | 'CAPTURING' | 'HEALTHY' | 'DEGRADED' | 'FAILED' | 'STOPPED' | 'DISABLED';
 
 export interface SessionRecord {
@@ -76,7 +76,54 @@ export interface CitationRecord {
   documentId?: string;
   title?: string;
   excerpt?: string;
+  quote?: string;
   ordinal?: number;
+}
+
+export interface CitationMetrics {
+  requestedCount: number;
+  validCitationCount: number;
+  invalidCitationCount: number;
+  duplicateCitationCount: number;
+  precision: number;
+  quoteCoverage: number;
+}
+
+export interface TurnIntelligenceRecord {
+  schemaVersion: 1;
+  intent: string;
+  confidence: number;
+  ambiguous: boolean;
+  continuation: boolean;
+  parentTurnId?: string | null;
+  contextTurnIds: string[];
+  topicTerms: string[];
+  entities: string[];
+  retrievalQuery: string;
+  contextQuery: string;
+  requiresRetrieval: boolean;
+}
+
+export interface RetrievalHitRecord {
+  chunkId: string;
+  documentId: string;
+  title: string;
+  ordinal: number;
+  rank: number;
+  score: number;
+  lexicalCoverage?: number | null;
+  matchedTerms: string[];
+  excerpt: string;
+}
+
+export interface RetrievalRunRecord {
+  id: string;
+  sessionId?: string | null;
+  turnId?: string | null;
+  query: string;
+  candidateCount: number;
+  hits: RetrievalHitRecord[];
+  createdAt: string;
 }
 
 export interface AnswerRecord {
@@ -88,6 +135,8 @@ export interface AnswerRecord {
   grounding: GroundingState;
   sourceChunkIds: string[];
   citations?: CitationRecord[];
+  retrievalRunId?: string | null;
+  citationMetrics?: CitationMetrics | null;
   createdAt: string;
 }
 
@@ -122,6 +171,7 @@ export type RuntimeEvent =
   | { type: 'transcript.stable'; payload: TranscriptStreamEventRecord }
   | { type: 'transcript.final'; payload: TranscriptRevisionRecord }
   | { type: 'turn.created'; payload: TurnRecord }
+  | { type: 'turn.intelligence'; payload: { turnId: string; intelligence: TurnIntelligenceRecord } }
   | { type: 'answer.started'; payload: { turnId: string; jobId?: string } }
   | { type: 'answer.final'; payload: AnswerRecord }
   | { type: 'audio.gap'; payload: GapRecord }

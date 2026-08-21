@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
-const css = await readFile(new URL('../app/styles.css', import.meta.url), 'utf8');
+const app = await readFile(new URL('../apps/web/public/app-react.js', import.meta.url), 'utf8');
+const css = await readFile(new URL('../apps/web/public/styles.css', import.meta.url), 'utf8');
 const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8');
 
 test('main session workspace no longer renders pipeline/history rail or duplicated Q&A list', () => {
@@ -42,7 +42,8 @@ test('live transcript is transcription-only newest-first and has no horizontal c
 });
 
 test('automatic answer generation remains server-owned and selection remains display-only', () => {
-  assert.ok(server.includes('queueMicrotask(()=>persistAutoAnswer(turn)'));
+  assert.ok(server.includes('runBackground(`answer.manual:${turn.id}`'));
+  assert.ok(server.includes('runBackground(`answer.auto:${turn.id}`'));
   assert.ok(server.includes('brainRuntime.autoAnswer'));
   assert.ok(app.includes('chooseTurnFromHub'));
   assert.ok(app.includes('this.selectTurn(id,{pin:true})'));

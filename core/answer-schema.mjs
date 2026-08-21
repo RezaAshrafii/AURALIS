@@ -1,3 +1,5 @@
+import { validateCitations } from './citation-integrity.mjs';
+
 export class AnswerSchemaError extends Error {
   constructor(message, code = 'PROVIDER_SCHEMA_ERROR') {
     super(message);
@@ -89,7 +91,7 @@ function parseObjectCandidate(raw) {
   throw new AnswerSchemaError('Provider output nesting exceeded the parser limit.');
 }
 
-export function parseAnswerEnvelope(raw, allowedChunkIds = []) {
+export function parseAnswerEnvelope(raw, allowedEvidence = []) {
   const parsed = parseObjectCandidate(raw);
   const answer = typeof parsed.answer === 'string' ? parsed.answer.trim() : '';
   if (!answer) throw new AnswerSchemaError('Provider output did not contain a non-empty answer string.');
@@ -100,12 +102,11 @@ export function parseAnswerEnvelope(raw, allowedChunkIds = []) {
     if (typeof nested.answer !== 'string' || !nested.answer.trim()) {
       throw new AnswerSchemaError('Nested provider envelope was invalid.');
     }
-    return parseAnswerEnvelope(JSON.stringify(nested), allowedChunkIds);
+    return parseAnswerEnvelope(JSON.stringify(nested), allowedEvidence);
   }
 
-  const allow = allowedChunkIds instanceof Set ? allowedChunkIds : new Set(allowedChunkIds);
-  const requestedIds = Array.isArray(parsed.sourceChunkIds) ? parsed.sourceChunkIds.map(String) : [];
-  const sourceChunkIds = requestedIds.filter(id => allow.has(id));
+  const citationValidation = validateCitations(parsed, allowedEvidence);
+  const sourceChunkIds = citationValidation.sourceChunkIds;
   let grounding = allowedGrounding.has(String(parsed.grounding)) ? String(parsed.grounding) : 'general';
   if ((grounding === 'source' || grounding === 'mixed') && sourceChunkIds.length === 0) {
     grounding = 'grounding_unverified';
@@ -114,8 +115,16 @@ export function parseAnswerEnvelope(raw, allowedChunkIds = []) {
   return {
     answer,
     sourceChunkIds,
+    citations: citationValidation.citations,
     grounding,
-    invalidCitationCount: requestedIds.length - sourceChunkIds.length,
-    schemaVersion: 1
+    invalidCitationCount: citationValidation.invalidCitationCount,
+    duplicateCitationCount: citationValidation.duplicateCitationCount,
+    citationMetrics: {
+      requestedCount: citationValidation.requestedCount,
+      validCitationCount: citationValidation.validCitationCount,
+      precision: citationValidation.precision,
+      quoteCoverage: citationValidation.quoteCoverage
+    },
+    schemaVersion: 2
   };
 }

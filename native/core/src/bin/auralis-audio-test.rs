@@ -3,7 +3,7 @@ use std::{
     io::{Read, Write},
     os::windows::ffi::OsStrExt,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex},
     thread::{self, JoinHandle},
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -31,6 +31,7 @@ use auralis_core::{
     storage::LedgerRepository,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use windows::{
     Win32::Storage::FileSystem::{MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW},
@@ -42,6 +43,7 @@ const SUMMARY_FILE: &str = "capture-summary.json";
 const LEDGER_FILE: &str = "audio-ledger.sqlite";
 const LOG_FILE: &str = "logs/capture.log";
 const SPOOL_DIRECTORY: &str = "spool";
+const PRODUCT_EVENT_JOURNAL_FILE: &str = "product-events.jsonl";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -66,8 +68,71 @@ struct Arguments {
     mode: TestMode,
     duration: Duration,
     output: PathBuf,
+    chunk_seconds: u32,
     resume: bool,
     stop_file: Option<PathBuf>,
+    event_protocol: Option<EventProtocol>,
+    event_session_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EventProtocol {
+    JsonLinesV1,
+}
+
+#[derive(Clone)]
+struct ProductEventSink {
+    session_id: String,
+    journal: Arc<Mutex<fs::File>>,
+}
+
+impl ProductEventSink {
+    fn open(session_id: String, output: &Path) -> Result<Self, String> {
+        let journal_path = output.join(PRODUCT_EVENT_JOURNAL_FILE);
+        let journal = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&journal_path)
+            .map_err(io_error)?;
+        journal.sync_all().map_err(io_error)?;
+        Ok(Self {
+            session_id,
+            journal: Arc::new(Mutex::new(journal)),
+        })
+    }
+
+    fn emit(&self, event_type: &str, channel_id: Option<&str>, payload: Value) {
+        let line = json!({
+            "protocol": "auralis.native/jsonl-v1",
+            "type": event_type,
+            "session_id": self.session_id,
+            "channel_id": channel_id,
+            "occurred_at": utc_now(),
+            "payload": payload,
+        });
+        let Ok(serialized) = serde_json::to_string(&line) else {
+            return;
+        };
+        if event_type != "probe.heartbeat" {
+            let journal_result = self
+                .journal
+                .lock()
+                .map_err(|_| "product event journal lock is poisoned".to_string())
+                .and_then(|mut journal| {
+                    writeln!(journal, "{serialized}").map_err(io_error)?;
+                    journal.flush().map_err(io_error)?;
+                    journal.sync_data().map_err(io_error)
+                });
+            if let Err(error) = journal_result {
+                eprintln!("AURALIS_PRODUCT_EVENT_JOURNAL_ERROR: {error}");
+                return;
+            }
+        }
+        let stdout = std::io::stdout();
+        let mut locked = stdout.lock();
+        let _ = writeln!(locked, "{serialized}");
+        let _ = locked.flush();
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -225,8 +290,20 @@ fn run() -> Result<i32, String> {
     let output = absolute_path(&arguments.output)?;
     fs::create_dir_all(output.join("logs")).map_err(io_error)?;
     fs::create_dir_all(output.join(SPOOL_DIRECTORY)).map_err(io_error)?;
+    let event_sink = arguments
+        .event_protocol
+        .map(|_| {
+            ProductEventSink::open(
+                arguments
+                    .event_session_id
+                    .clone()
+                    .expect("event-session-id is validated by parse_arguments"),
+                &output,
+            )
+        })
+        .transpose()?;
     let log_path = output.join(LOG_FILE);
-    log_line(&log_path, "starting AUR-1206 Windows audio test")?;
+    log_line(&log_path, "starting AUR-1401 Windows product audio bridge")?;
 
     let state_path = output.join(STATE_FILE);
     let ledger_path = output.join(LEDGER_FILE);
@@ -262,7 +339,8 @@ fn run() -> Result<i32, String> {
                 config_snapshot_json: serde_json::json!({
                     "mode":arguments.mode,
                     "queue_capacity":DEFAULT_CAPTURE_QUEUE_CAPACITY,
-                    "chunk_seconds":DEFAULT_CHUNK_SECONDS,
+                    "chunk_seconds":arguments.chunk_seconds,
+                    "event_protocol":arguments.event_protocol.map(|_| "jsonl-v1"),
                 })
                 .to_string(),
             })
@@ -346,6 +424,8 @@ fn run() -> Result<i32, String> {
             descriptor,
             mic_cursor,
             mic_receiver,
+            arguments.chunk_seconds,
+            event_sink.clone(),
         )?);
     }
     if let Some(descriptor) = descriptors.system_loopback.clone() {
@@ -366,6 +446,8 @@ fn run() -> Result<i32, String> {
             descriptor,
             system_cursor,
             system_receiver,
+            arguments.chunk_seconds,
+            event_sink.clone(),
         )?);
     }
     drop(setup_ledger);
@@ -378,7 +460,13 @@ fn run() -> Result<i32, String> {
             arguments.duration.as_secs()
         ),
     )?;
-    print_descriptors(&descriptors);
+    if let Some(events) = event_sink.as_ref() {
+        for channel in &active_channels {
+            emit_channel_started(events, &channel.descriptor);
+        }
+    } else {
+        print_descriptors(&descriptors);
+    }
 
     let deadline = Instant::now() + arguments.duration;
     let mut lifecycle_stop: Option<WindowsLifecycleSignal> = None;
@@ -401,6 +489,27 @@ fn run() -> Result<i32, String> {
             Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
                 return Err("Windows lifecycle monitor disconnected".into());
             }
+        }
+        if let Some(events) = event_sink.as_ref() {
+            let mic = mic_sender.stats();
+            let system = system_sender.stats();
+            events.emit(
+                "probe.heartbeat",
+                None,
+                json!({
+                    "queue_depth": 0,
+                    "queue_depth_observable": false,
+                    "queue_capacity": DEFAULT_CAPTURE_QUEUE_CAPACITY,
+                    "accepted_buffers": mic
+                        .accepted_buffers
+                        .saturating_add(system.accepted_buffers),
+                    "accepted_samples": mic
+                        .accepted_samples
+                        .saturating_add(system.accepted_samples),
+                    "dropped_buffers": mic.dropped_buffers.saturating_add(system.dropped_buffers),
+                    "dropped_samples": mic.dropped_samples.saturating_add(system.dropped_samples),
+                }),
+            );
         }
     }
 
@@ -430,6 +539,15 @@ fn run() -> Result<i32, String> {
             system_stats
         };
         channel_results.push((channel.id, channel.descriptor, queue, durable_sequence));
+    }
+    if let Some(events) = event_sink.as_ref() {
+        for (_, descriptor, _, durable_sequence) in &channel_results {
+            events.emit(
+                "capture.channel_stopped",
+                Some(product_channel_id(descriptor.source_kind)),
+                json!({ "sequence": durable_sequence }),
+            );
+        }
     }
     if let Err(error) = stop_result {
         log_line(&log_path, &format!("capture stop returned: {error}"))?;
@@ -518,23 +636,40 @@ fn run() -> Result<i32, String> {
             summary.result, summary.unknown_gap_count, summary.lifecycle_signals_dropped
         ),
     )?;
-    println!("RESULT: {}", summary.result);
-    println!("SUMMARY: {}", summary_path.display());
-    println!("LEDGER: {}", ledger_path.display());
-    println!("SPOOL: {}", spool_path.display());
-    println!("UNKNOWN_GAPS: {}", summary.unknown_gap_count);
-    println!(
-        "LIFECYCLE_SIGNALS_DROPPED: {}",
-        summary.lifecycle_signals_dropped
-    );
-    if resume_required {
-        println!(
-            "RESUME: {} capture --mode {} --duration-seconds {} --output \"{}\" --resume",
-            std::env::current_exe().map_err(io_error)?.display(),
-            mode_name(arguments.mode),
-            arguments.duration.as_secs(),
-            output.display()
+    if let Some(events) = event_sink.as_ref() {
+        events.emit(
+            "capture.completed",
+            None,
+            json!({
+                "result": summary.result,
+                "summary_path": summary_path,
+                "ledger_path": ledger_path,
+                "spool_path": spool_path,
+                "unknown_gaps": summary.unknown_gap_count,
+                "lifecycle_signals_dropped": summary.lifecycle_signals_dropped,
+            }),
         );
+    } else {
+        println!("RESULT: {}", summary.result);
+        println!("SUMMARY: {}", summary_path.display());
+        println!("LEDGER: {}", ledger_path.display());
+        println!("SPOOL: {}", spool_path.display());
+        println!("UNKNOWN_GAPS: {}", summary.unknown_gap_count);
+        println!(
+            "LIFECYCLE_SIGNALS_DROPPED: {}",
+            summary.lifecycle_signals_dropped
+        );
+    }
+    if resume_required {
+        if event_sink.is_none() {
+            println!(
+                "RESUME: {} capture --mode {} --duration-seconds {} --output \"{}\" --resume",
+                std::env::current_exe().map_err(io_error)?.display(),
+                mode_name(arguments.mode),
+                arguments.duration.as_secs(),
+                output.display()
+            );
+        }
         Ok(20)
     } else {
         Ok(0)
@@ -549,8 +684,11 @@ fn parse_arguments() -> Result<Arguments, String> {
     let mut mode = None;
     let mut duration = None;
     let mut output = None;
+    let mut chunk_seconds = DEFAULT_CHUNK_SECONDS;
     let mut resume = false;
     let mut stop_file = None;
+    let mut event_protocol = None;
+    let mut event_session_id = None;
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--mode" => {
@@ -579,6 +717,17 @@ fn parse_arguments() -> Result<Arguments, String> {
                         .ok_or_else(|| "--output requires a path".to_string())?,
                 ));
             }
+            "--chunk-seconds" => {
+                let value = arguments
+                    .next()
+                    .ok_or_else(|| "--chunk-seconds requires a value".to_string())?
+                    .parse::<u32>()
+                    .map_err(|_| "--chunk-seconds must be an integer".to_string())?;
+                if !(2..=10).contains(&value) {
+                    return Err("--chunk-seconds must be between 2 and 10".into());
+                }
+                chunk_seconds = value;
+            }
             "--resume" => resume = true,
             "--stop-file" => {
                 stop_file = Some(PathBuf::from(
@@ -587,20 +736,47 @@ fn parse_arguments() -> Result<Arguments, String> {
                         .ok_or_else(|| "--stop-file requires a path".to_string())?,
                 ));
             }
+            "--event-protocol" => {
+                event_protocol = Some(match arguments.next().as_deref() {
+                    Some("jsonl-v1") => EventProtocol::JsonLinesV1,
+                    _ => return Err("--event-protocol must be jsonl-v1".into()),
+                });
+            }
+            "--event-session-id" => {
+                let value = arguments
+                    .next()
+                    .ok_or_else(|| "--event-session-id requires a value".to_string())?;
+                if value.is_empty() || value.len() > 128 || value.chars().any(char::is_control) {
+                    return Err("--event-session-id is invalid".into());
+                }
+                event_session_id = Some(value);
+            }
             _ => return Err(format!("unknown argument: {argument}\n{}", usage())),
         }
+    }
+    if event_protocol.is_some() != event_session_id.is_some() {
+        return Err("--event-protocol and --event-session-id must be supplied together".into());
     }
     Ok(Arguments {
         mode: mode.ok_or_else(usage)?,
         duration: duration.ok_or_else(usage)?,
         output: output.ok_or_else(usage)?,
+        chunk_seconds,
         resume,
         stop_file,
+        event_protocol,
+        event_session_id,
     })
 }
 
 fn usage() -> String {
-    "usage: auralis-audio-test capture --mode mic|loopback|both --duration-seconds N --output PATH [--resume] [--stop-file PATH]".into()
+    concat!(
+        "usage: auralis-audio-test capture --mode mic|loopback|both ",
+        "--duration-seconds N --output PATH [--chunk-seconds 2..10] ",
+        "[--resume] [--stop-file PATH] ",
+        "[--event-protocol jsonl-v1 --event-session-id ID]"
+    )
+    .into()
 }
 
 type ResumeCursor = (CaptureStartCursor, Option<u64>);
@@ -725,8 +901,12 @@ fn spawn_persistence_worker(
     descriptor: WasapiCaptureDescriptor,
     cursor: ResumeCursor,
     receiver: auralis_core::audio::handoff::CaptureQueueReceiver,
+    chunk_seconds: u32,
+    event_sink: Option<ProductEventSink>,
 ) -> Result<ActiveChannel, String> {
     let worker_channel = channel_id.clone();
+    let worker_format = descriptor.format;
+    let worker_source_kind = descriptor.source_kind;
     let worker = thread::Builder::new()
         .name(format!(
             "auralis-persist-{}",
@@ -734,17 +914,18 @@ fn spawn_persistence_worker(
         ))
         .spawn(move || {
             let ledger = LedgerRepository::open(&ledger_path).map_err(|error| error.to_string())?;
+            let event_spool_root = spool_path.clone();
             let spool = FileRawSpool::new(
                 SpoolContract {
                     root: spool_path,
-                    chunk_frames: u64::from(descriptor.format.sample_rate_hz)
-                        * u64::from(DEFAULT_CHUNK_SECONDS),
+                    chunk_frames: u64::from(worker_format.sample_rate_hz)
+                        * u64::from(chunk_seconds),
                     sync_on_finalize: true,
                 },
                 Arc::new(utc_now),
             )
             .map_err(|error| error.to_string())?;
-            let mut persistence = CapturePersistenceWorker::new(
+            let persistence = CapturePersistenceWorker::new(
                 receiver,
                 ledger,
                 spool,
@@ -756,6 +937,38 @@ fn spawn_persistence_worker(
                 },
                 Arc::new(utc_now),
             );
+            let mut persistence = if let Some(events) = event_sink {
+                let channel = product_channel_id(worker_source_kind).to_string();
+                persistence.with_chunk_commit_observer(Arc::new(move |chunk| {
+                    events.emit(
+                        "audio.chunk_closed",
+                        Some(&channel),
+                        json!({
+                            "chunk_id": chunk.id,
+                            "path": event_spool_root.join(&chunk.path),
+                            "seq_start": chunk.seq_start,
+                            "seq_end": chunk.seq_end,
+                            "qpc_start_100ns": chunk.qpc_start_100ns,
+                            "qpc_end_100ns": chunk.qpc_end_100ns,
+                            "sample_rate": chunk.sample_rate,
+                            "channels": chunk.channels,
+                            "channel_mask": chunk.channel_mask,
+                            "sample_format": chunk.sample_format.as_storage_value(),
+                            "format_tag": wave_format_tag(chunk.sample_format),
+                            "bits_per_sample": chunk.bits_per_sample,
+                            "valid_bits_per_sample": chunk.valid_bits_per_sample,
+                            "block_align": chunk.block_align,
+                            "byte_length": chunk.byte_length,
+                            "sha256": chunk.sha256_hex,
+                            "discontinuity": chunk
+                                .discontinuity
+                                .map(|reason| reason.as_storage_str()),
+                        }),
+                    );
+                }))
+            } else {
+                persistence
+            };
             persistence
                 .run_until_disconnected()
                 .map_err(|error| error.to_string())?;
@@ -1001,6 +1214,46 @@ fn signal_affects_active_channel(
             )
             .is_some()
     })
+}
+
+fn product_channel_id(source_kind: SourceKind) -> &'static str {
+    match source_kind {
+        SourceKind::UserMic => "user-mic",
+        SourceKind::SystemLoopback => "system-loopback",
+        SourceKind::ProcessLoopback => "process-loopback",
+    }
+}
+
+fn wave_format_tag(sample_format: SampleFormat) -> u16 {
+    match sample_format {
+        SampleFormat::PcmU8
+        | SampleFormat::PcmI16
+        | SampleFormat::PcmI24
+        | SampleFormat::PcmI32 => 1,
+        SampleFormat::Float32 => 3,
+        SampleFormat::Extensible => 0xfffe,
+        SampleFormat::Unknown(tag) => tag,
+    }
+}
+
+fn emit_channel_started(events: &ProductEventSink, descriptor: &WasapiCaptureDescriptor) {
+    events.emit(
+        "capture.channel_started",
+        Some(product_channel_id(descriptor.source_kind)),
+        json!({
+            "source_kind": descriptor.source_kind.as_storage_str(),
+            "device_id": descriptor.device_id,
+            "sample_rate": descriptor.format.sample_rate_hz,
+            "channels": descriptor.format.channels,
+            "channel_mask": descriptor.format.channel_mask,
+            "sample_format": descriptor.format.sample_format.as_storage_value(),
+            "format_tag": wave_format_tag(descriptor.format.sample_format),
+            "bits_per_sample": descriptor.format.bits_per_sample,
+            "valid_bits_per_sample": descriptor.format.valid_bits_per_sample,
+            "block_align": descriptor.format.block_align,
+            "endpoint_buffer_frames": descriptor.endpoint_buffer_frames,
+        }),
+    );
 }
 
 fn format_summary(descriptor: &WasapiCaptureDescriptor) -> FormatSummary {

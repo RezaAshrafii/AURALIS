@@ -1,5 +1,6 @@
 param(
   [switch]$RunAudioHardware,
+  [switch]$AllowRustSkip,
   [ValidateSet('Quick','Soak20')]
   [string]$AudioSuite = 'Quick',
   [string]$LocalWhisperUrl = ''
@@ -27,7 +28,8 @@ if ($null -ne $cargo) {
   Run-Step 'Rust tests' { cargo test --manifest-path native/Cargo.toml --workspace --locked }
   Write-Host 'RUST_GATE=PASS' -ForegroundColor Green
 } else {
-  Write-Host "`nRUST_GATE=SKIP (cargo not found)" -ForegroundColor Yellow
+  if (-not $AllowRustSkip) { throw 'RUST_GATE=FAIL (cargo not found). Use -AllowRustSkip only for a non-release JS-only diagnostic run.' }
+  Write-Host "`nRUST_GATE=SKIP_NON_RELEASE (cargo not found)" -ForegroundColor Yellow
 }
 
 if (-not [string]::IsNullOrWhiteSpace($LocalWhisperUrl)) {

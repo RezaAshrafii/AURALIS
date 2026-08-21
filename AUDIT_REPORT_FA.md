@@ -1,4 +1,6 @@
-# Audit v0.11.2 — Runtime/Auth Stabilization
+# گزارش تاریخی Audit v0.11.2 — Runtime/Auth Stabilization
+
+این فایل سابقهٔ ممیزی نسخهٔ 0.11.2 است. گزارش معماری جاری در `ARCHITECTURE_AUDIT_FA.md` قرار دارد.
 
 بررسی تصاویر کاربر دو failure واقعی را نشان داد:
 

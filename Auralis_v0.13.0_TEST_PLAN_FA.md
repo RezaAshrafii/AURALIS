@@ -10,6 +10,8 @@ npm run frontend:build
 npm run verify
 ```
 
+خروجی معتبر باید شامل `AURALIS_VERIFY_PASS`، صفر failure، type-check موفق و web build موفق باشد. تست‌های `architecture-boundaries` باید کنترل Host/Origin/token، سقف JSON، مسیر static، config و drain شدن background task را پوشش دهند.
+
 یا یکجا:
 
 ```powershell
@@ -34,6 +36,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-v013-speech-ga
 ```
 
 ## 4) معیارهای عدم قبولی
+- ناسازگاری نسخه بین `VERSION`، packageها، UI metadata یا Cargo.
+- پذیرش bootstrap از Origin یا `Sec-Fetch-Site` بین‌سایتی.
+- پذیرش JSON نامعتبر، آرایه‌ای یا بزرگ‌تر از سقف endpoint.
+- خروج background task بدون ثبت failure یا بسته‌شدن SQLite پیش از توقف capture.
 - ASR error به‌عنوان متن مکالمه ظاهر شود.
 - FINAL یک segment دوبار Turn بسازد.
 - local ASR بتواند به host غیر-loopback متصل شود.

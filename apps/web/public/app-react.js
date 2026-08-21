@@ -7,7 +7,7 @@
   var Chip=UI.Chip,Button=UI.Button,ToggleButton=UI.ToggleButton,Surface=UI.Surface,Field=UI.Field,Empty=UI.Empty,SectionHead=UI.SectionHead,Metric=UI.Metric,PipelineStage=UI.PipelineStage,ErrorBoundary=UI.ErrorBoundary;
   var text=UI.text,formatTime=UI.formatTime,formatDate=UI.formatDate,formatDuration=UI.formatDuration,formatBytes=UI.formatBytes,shortId=UI.shortId,roleLabel=UI.roleLabel,modeMeta=UI.modeMeta,eventLabel=UI.eventLabel,toneForState=UI.toneForState,lsGet=UI.lsGet,lsSet=UI.lsSet;
 
-  function isCaptureActive(value){return /STARTING|CAPTURING|RUNNING|VALIDATION_ACTIVE/i.test(String(value||''));}
+  function isCaptureActive(value){return /CAPTURING|RUNNING/i.test(String(value||''));}
   function sourceRoleFromChannel(value){return String(value||'').indexOf('system')>=0?'system':'user';}
   function isEditableTarget(target){
     if(!target)return false;
@@ -53,14 +53,14 @@
     constructor(props){
       super(props);
       this.state={
-        token:'',version:'0.12.0',view:'session',theme:lsGet('theme','dark'),connection:'booting',
+        token:'',version:'0.14.1',view:'session',theme:lsGet('theme','dark'),connection:'booting',
         health:null,metrics:null,native:null,asr:null,brainRuntime:null,
         sessions:[],sessionId:null,activeSessionId:null,sessionActive:false,currentSession:null,
         mode:lsGet('mode','oral_copilot'),mic:lsGet('mic',true),loopback:lsGet('loopback',true),chunkSeconds:Number(lsGet('chunkSeconds',5)),
         contextText:lsGet('contextText',''),responseStyle:lsGet('responseStyle','concise'),
         turns:[],transcripts:[],gaps:[],activity:[],selectedTurnId:null,selectedDetail:null,inspectorPinned:false,
         sources:[],retrieveResults:[],retrieveQuery:'',sourceTitle:'منبع جدید',sourceText:'',sourceFileName:'',
-        apiKey:'',model:lsGet('model','gemini-3.1-flash-lite'),strictSource:lsGet('strictSource',true),autoAnswer:lsGet('autoAnswer',true),
+        apiKey:'',model:lsGet('model','gemini-3.1-flash-lite'),strictSource:lsGet('strictSource',true),autoAnswer:lsGet('autoAnswer',true),localAsrEnabled:lsGet('localAsrEnabled',false),localAsrUrl:lsGet('localAsrUrl','http://127.0.0.1:8080'),
         manualText:'',busySession:false,busyRuntime:false,busyManual:false,busySource:false,busyAnswer:false,busySettings:false,
         notice:null,lastSyncAt:null,conversationOpen:false,sessionsOpen:false,transcriptArchiveOpen:false
       };
@@ -108,7 +108,7 @@
         if(!response.ok)throw new Error('Bootstrap HTTP '+response.status);
         var bootstrap=await response.json();
         this.token=String(bootstrap.token||'');
-        this.setState({token:this.token,version:String(bootstrap.version||'0.12.0')});
+        this.setState({token:this.token,version:String(bootstrap.version||'0.14.1')});
         var sessionData=await this.refreshSessions();
         await Promise.all([this.refreshHealth(),this.refreshNative(),this.refreshRuntime(),this.refreshMetrics(),this.refreshSources()]);
         var sessions=sessionData&&sessionData.sessions||[];
@@ -141,7 +141,7 @@
       this.setState({native:data,activeSessionId:active?data.sessionId:null,sessionActive:active});
       return data;
     }
-    async refreshRuntime(){var data=await this.api('/v1/asr/status');this.setState({asr:data});return data;}
+    async refreshRuntime(){var data=await this.api('/v1/asr/status');var local=data&&data.localFallback||{};this.setState({asr:data,localAsrEnabled:Boolean(local.enabled),localAsrUrl:text(local.baseUrl,this.state.localAsrUrl)});return data;}
     async refreshSources(){try{var data=await this.api('/v1/sources');this.setState({sources:data.sources||[]});return data;}catch(error){return null;}}
     async refreshSessions(){
       var data=await this.api('/v1/sessions?limit=24');
@@ -312,6 +312,24 @@
       finally{this.setState({busyRuntime:false});}
     }
 
+    async saveLocalAsr(){
+      this.setState({busyRuntime:true});
+      try{
+        var data=await this.api('/v1/asr/local-config',{method:'POST',body:JSON.stringify({enabled:this.state.localAsrEnabled,baseUrl:this.state.localAsrUrl,language:'fa',model:'whisper.cpp-local'})});
+        lsSet('localAsrEnabled',this.state.localAsrEnabled);lsSet('localAsrUrl',this.state.localAsrUrl);
+        await Promise.all([this.refreshRuntime(),this.refreshHealth()]);
+        this.setNotice(data.enabled?'Fallback محلی whisper.cpp فعال شد.':'Fallback محلی غیرفعال شد.','success');
+      }catch(error){this.setNotice('تنظیم ASR محلی ناموفق: '+error.message,'danger');}
+      finally{this.setState({busyRuntime:false});}
+    }
+
+    async probeLocalAsr(){
+      this.setState({busyRuntime:true});
+      try{var data=await this.api('/v1/asr/local-probe',{method:'POST',body:JSON.stringify({baseUrl:this.state.localAsrUrl})});this.setNotice('whisper.cpp روی loopback در دسترس است · '+text(data.latencyMs,0)+' ms','success');}
+      catch(error){this.setNotice('whisper.cpp محلی در دسترس نیست: '+error.message,'warning');}
+      finally{this.setState({busyRuntime:false});}
+    }
+
     async testBrain(){
       if(!this.state.apiKey.trim()){this.setNotice('API Key لازم است.','warning');return;}
       this.setState({busyRuntime:true});
@@ -448,7 +466,7 @@
       var healthStatus=text(this.state.health&&this.state.health.status,'connecting').toUpperCase();
       var healthTone=toneForState(healthStatus);
       return h('header',{className:'appbar'},
-        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.12.0 · Production Audio Core'))),
+        h('div',{className:'brand-block'},h('div',{className:'brand-mark','aria-hidden':'true'},h('span',{className:'brand-wave'},h('i'),h('i'),h('i'),h('i'))),h('div',null,h('div',{className:'brand-line'},h('span',{className:'brand-name'},'Auralis'),h('span',{className:'brand-edition'},'Direct Audio Workspace')),h('div',{className:'brand-version'},'v0.14.1 · Intelligence Layer'))),
         h('nav',{className:'top-nav','aria-label':'بخش‌های برنامه'},NAV_ITEMS.map(function(item){
           var active=this.state.view===item.value;
           return h('button',{key:item.value,type:'button',className:'nav-item'+(active?' active':''),onClick:function(){this.setState({view:item.value});}.bind(this),'aria-current':active?'page':undefined},h('span',null,item.label),h('small',null,item.caption));
@@ -521,13 +539,15 @@
     renderInspector(){
       var detail=this.state.selectedDetail;
       if(!detail||!detail.turn)return h(Surface,{className:'inspector-surface'},h(Empty,{symbol:'Q',title:'یک Turn را انتخاب کن',text:'پرسش، پاسخ، منبع و اتصال آن به قطعهٔ صوتی در این بخش نمایش داده می‌شود.'}));
-      var answer=detail.latestAnswer,answerable=['question','request'].indexOf(detail.turn.kind)>=0,retrieved=answer&&answer.retrieved||[],cited=new Set(answer&&answer.sourceChunkIds||[]);
+      var answer=detail.latestAnswer,answerable=['question','request'].indexOf(detail.turn.kind)>=0,retrieved=answer&&answer.retrieved||[],citations=answer&&answer.citations||[],cited=new Set(answer&&answer.sourceChunkIds||[]),intelligence=detail.intelligence;
       return h(Surface,{className:'inspector-surface'},
         h(SectionHead,{eyebrow:'TURN INSPECTOR',title:'جزئیات پاسخ',action:h('div',{className:'inspector-head-actions'},h(Chip,{tone:detail.turn.source_role==='system'?'purple':'blue'},roleLabel(detail.turn.source_role)),this.state.inspectorPinned?h(Button,{variant:'soft',tone:'neutral',className:'follow-live-btn',onClick:this.followLive.bind(this)},'دنبال‌کردن زنده'):h(Chip,{tone:'success',dot:true,active:true},'LIVE'))}),
         h('div',{className:'inspector-question'},h('span',{className:'mini-caption'},'پرسش / درخواست'),h('div',{className:'big-copy'},text(detail.turn.text_raw,'')),h('div',{className:'route-meta'},h(Chip,{tone:answerable?'primary':'neutral'},text(detail.turn.kind)),h('span',null,text(detail.turn.route_reason)) )),
+        intelligence?h('div',{className:'intelligence-strip'},h(Chip,{tone:intelligence.ambiguous?'danger':'primary'},text(intelligence.intent,'unknown')),h('span',null,'اطمینان '+Math.round(Number(intelligence.confidence||0)*100)+'٪'),intelligence.continuation?h(Chip,{tone:'purple'},'ادامهٔ Turn '+shortId(intelligence.parentTurnId)):null,(intelligence.topicTerms||[]).slice(0,3).map(function(term){return h(Chip,{key:term,tone:'neutral'},text(term));})):null,
         h('div',{className:'inspector-answer'},h('span',{className:'mini-caption'},'پاسخ'),answer?h('div',{className:'answer-copy'},text(answer.answer)):h('div',{className:'answer-placeholder'},answerable?'هنوز پاسخی ثبت نشده است.':'این Turn خبری است و به Brain ارسال نمی‌شود.')),
         answerable&&!answer?h('div',{className:'answer-waiting'},h('span',null,shouldAutoAnswerUi(detail.turn,(this.state.currentSession&&this.state.currentSession.mode)||this.state.mode,this.state.autoAnswer,this.state.loopback)?'پاسخ خودکار در حال آماده‌سازی است.':'این Mode پاسخ خودکار این Turn را تولید نمی‌کند.'),h('kbd',null,'Z'),h('small',null,'پاسخ دستی / فوری')):null,
         answer?h('div',{className:'answer-foot'},h(Chip,{tone:answer.grounding==='source'?'success':answer.grounding==='grounding_unverified'?'danger':'neutral'},text(answer.grounding)),h('span',null,(answer.sourceChunkIds||[]).length+' استناد معتبر'),h('span',null,text(answer.model))):null,
+        citations.length?h('div',{className:'citation-list'},citations.map(function(item,index){return h('blockquote',{key:item.chunkId,className:'citation-quote'},h('strong',null,'['+(index+1)+'] '+text(item.title,'منبع')),h('span',null,'«'+text(item.quote,'بدون نقل‌قول')+'»'));})):null,
         retrieved.length?h('details',{className:'sources-disclosure'},h('summary',null,'شواهد بازیابی‌شده'),h('div',{className:'evidence-list'},retrieved.map(function(item){return h('article',{key:item.chunkId,className:'evidence-card'+(cited.has(item.chunkId)?' cited':'')},h('div',{className:'evidence-title'},text(item.title,'منبع')),h('div',{className:'evidence-text'},text(item.excerpt,'')));}))):null,
         detail.segments&&detail.segments.length?h('details',{className:'technical-disclosure'},h('summary',null,'اتصال فنی Turn به صوت'),h('pre',null,detail.segments.map(function(segment){return 'segment '+shortId(segment.id)+'\nASR '+text(segment.transcript_provider)+' / '+text(segment.transcript_model)+'\nrevision '+text(segment.transcript_revision)+'\nseq '+text(segment.seq_start)+'..'+text(segment.seq_end);}).join('\n\n'))):null
       );
@@ -554,8 +574,8 @@
         h('div',{className:'page-title'},h('div',null,h('span',{className:'eyebrow'},'SOURCE GROUNDING'),h('h1',null,'منابع و بازیابی'),h('p',null,'تمام فایل‌ها از یک مسیر FTS5 ایندکس می‌شوند و استنادها فقط از قطعه‌های بازیابی‌شده پذیرفته می‌شوند.')),h(Chip,{tone:'primary'},this.state.sources.length+' منبع')),
         h('div',{className:'sources-layout'},
           h(Surface,{className:'source-import'},h(SectionHead,{title:'افزودن منبع',subtitle:'TXT، Markdown، CSV، JSON یا متن خام'}),h(Field,{label:'عنوان'},h('input',{className:'modern-input',value:this.state.sourceTitle,onChange:function(event){this.setState({sourceTitle:event.target.value});}.bind(this)})),h(Field,{label:'فایل متنی'},h('input',{className:'modern-file',type:'file',accept:'.txt,.md,.markdown,.csv,.json,.log,text/plain',onChange:this.onSourceFile.bind(this)})),this.state.sourceFileName?h(Chip,{tone:'primary'},this.state.sourceFileName):null,h(Field,{label:'متن منبع'},h('textarea',{className:'modern-textarea source-area',value:this.state.sourceText,onChange:function(event){this.setState({sourceText:event.target.value});}.bind(this),placeholder:'متن منبع را وارد کن…'})),h(Button,{variant:'state',tone:'primary',loading:this.state.busySource,disabled:!this.state.sourceText.trim(),onClick:this.importSource.bind(this)},'ایندکس منبع')),
-          h(Surface,{className:'sources-library'},h(SectionHead,{title:'منابع ایندکس‌شده',subtitle:'حذف هر منبع incremental است.',action:h(Chip,{tone:'neutral'},String(this.state.sources.length))}),h('div',{className:'sources-list'},this.state.sources.length?this.state.sources.map(function(source){return h('div',{key:source.id,className:'source-row'},h('div',{className:'source-icon'},'S'),h('div',{className:'source-copy'},h('strong',null,text(source.title)),h('small',null,text(source.chunk_count,0)+' قطعه · '+shortId(source.sha256))),h(Button,{variant:'icon',tone:'danger',title:'حذف منبع',onClick:function(){this.deleteSource(source.id);}.bind(this)},'حذف'));},this):h(Empty,{symbol:'S',title:'منبعی وجود ندارد',text:'یک فایل متنی یا متن خام اضافه کن.'}))),
-          h(Surface,{className:'retrieval-surface'},h(SectionHead,{title:'آزمون بازیابی',subtitle:'نتایج واقعی index؛ مستقل از Brain'}),h('div',{className:'retrieval-input'},h('input',{className:'modern-input',value:this.state.retrieveQuery,onChange:function(event){this.setState({retrieveQuery:event.target.value});}.bind(this),placeholder:'عبارت موردنظر…'}),h(Button,{variant:'soft',tone:'primary',disabled:!this.state.retrieveQuery.trim(),onClick:this.retrieve.bind(this)},'جست‌وجو')),h('div',{className:'retrieval-results'},this.state.retrieveResults.map(function(item){return h('article',{key:item.chunkId,className:'retrieval-card'},h('div',{className:'retrieval-title'},text(item.title)+' · قطعه '+text(item.ordinal)),h('div',{className:'retrieval-excerpt'},text(item.excerpt,'')),h('small',null,'score '+text(item.score)));})))
+          h(Surface,{className:'sources-library'},h(SectionHead,{title:'منابع ایندکس‌شده',subtitle:'نسخه‌های قبلی برای lineage حفظ و از retrieval فعال خارج می‌شوند.',action:h(Chip,{tone:'neutral'},String(this.state.sources.length))}),h('div',{className:'sources-list'},this.state.sources.length?this.state.sources.map(function(source){var active=source.status==='ACTIVE';return h('div',{key:source.id,className:'source-row'},h('div',{className:'source-icon'},'S'),h('div',{className:'source-copy'},h('strong',null,text(source.title)),h('small',null,'v'+text(source.source_version,1)+' · '+text(source.chunk_count,0)+' قطعه · '+shortId(source.sha256))),h(Chip,{tone:active?'success':source.status==='SUPERSEDED'?'warning':'neutral'},text(source.status)),active?h(Button,{variant:'icon',tone:'danger',title:'حذف منبع',onClick:function(){this.deleteSource(source.id);}.bind(this)},'حذف'):null);},this):h(Empty,{symbol:'S',title:'منبعی وجود ندارد',text:'یک فایل متنی یا متن خام اضافه کن.'}))),
+          h(Surface,{className:'retrieval-surface'},h(SectionHead,{title:'آزمون بازیابی',subtitle:'FTS5 + رتبه‌بندی قطعی و تنوع سند؛ مستقل از Brain'}),h('div',{className:'retrieval-input'},h('input',{className:'modern-input',value:this.state.retrieveQuery,onChange:function(event){this.setState({retrieveQuery:event.target.value});}.bind(this),placeholder:'عبارت موردنظر…'}),h(Button,{variant:'soft',tone:'primary',disabled:!this.state.retrieveQuery.trim(),onClick:this.retrieve.bind(this)},'جست‌وجو')),h('div',{className:'retrieval-results'},this.state.retrieveResults.map(function(item){return h('article',{key:item.chunkId,className:'retrieval-card'},h('div',{className:'retrieval-title'},'#'+text(item.rank)+' · '+text(item.title)+' · قطعه '+text(item.ordinal)),h('div',{className:'retrieval-excerpt'},text(item.excerpt,'')),h('small',null,'score '+text(item.score)+' · coverage '+Math.round(Number(item.lexicalCoverage||0)*100)+'٪'));})))
         )
       );
     }
@@ -601,7 +621,18 @@
         h(Field,{label:'Gemini API Key'},
           h('input',{className:'modern-input ltr',type:'password',value:this.state.apiKey,onChange:function(event){this.setState({apiKey:event.target.value});}.bind(this),placeholder:'AIza…',autoComplete:'off',spellCheck:false})
         ),
-        h('div',{className:'security-note'},'این build از Gemini Audio به‌عنوان adapter آزمایشی استفاده می‌کند؛ ضبط صوت و ledger با قطع یا quota شدن مدل متوقف نمی‌شوند.'),
+        h('div',{className:'security-note'},'این build از Gemini Audio به‌عنوان adapter اولیه استفاده می‌کند؛ ضبط صوت و ledger با قطع یا quota شدن مدل متوقف نمی‌شوند.'),
+        h('div',{className:'setting-row'},
+          h('div',null,h('strong',null,'Fallback محلی whisper.cpp'),h('span',null,'در خطای Cloud، فقط به سرویس loopback محلی سوییچ می‌کند.')),
+          h('input',{type:'checkbox',className:'form-check-input switch-input',checked:this.state.localAsrEnabled,onChange:function(event){this.setState({localAsrEnabled:event.target.checked});}.bind(this)})
+        ),
+        h(Field,{label:'آدرس whisper.cpp',help:'فقط http://127.0.0.1، localhost یا ::1 پذیرفته می‌شود.'},
+          h('input',{className:'modern-input ltr',value:this.state.localAsrUrl,onChange:function(event){this.setState({localAsrUrl:event.target.value});}.bind(this),placeholder:'http://127.0.0.1:8080'})
+        ),
+        h('div',{className:'settings-actions'},
+          h(Button,{variant:'soft',tone:'neutral',loading:this.state.busyRuntime,onClick:this.saveLocalAsr.bind(this)},'ذخیره ASR محلی'),
+          h(Button,{variant:'soft',tone:'neutral',loading:this.state.busyRuntime,onClick:this.probeLocalAsr.bind(this)},'تست whisper.cpp')
+        ),
         runtimeError?h('div',{className:'runtime-settings-alert'},h('strong',null,'AI فعال نیست'),h('span',null,runtimeError)):null,
         h('div',{className:'setting-row'},
           h('div',null,h('strong',null,'اتکا به منابع'),h('span',null,'استناد خارج از قطعه‌های بازیابی‌شده رد می‌شود.')),

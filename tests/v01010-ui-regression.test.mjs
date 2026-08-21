@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8');
-const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
-const kit = await readFile(new URL('../app/ui-kit.js', import.meta.url), 'utf8');
-const html = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
-const css = await readFile(new URL('../app/styles.css', import.meta.url), 'utf8');
-const react = await readFile(new URL('../app/vendor/react.production.min.js', import.meta.url), 'utf8');
-const reactDom = await readFile(new URL('../app/vendor/react-dom.production.min.js', import.meta.url), 'utf8');
+const runtimeConfig = await readFile(new URL('../runtime/config.mjs', import.meta.url), 'utf8');
+const app = await readFile(new URL('../apps/web/public/app-react.js', import.meta.url), 'utf8');
+const kit = await readFile(new URL('../apps/web/public/ui-kit.js', import.meta.url), 'utf8');
+const html = await readFile(new URL('../apps/web/public/index.html', import.meta.url), 'utf8');
+const css = await readFile(new URL('../apps/web/public/styles.css', import.meta.url), 'utf8');
+const react = await readFile(new URL('../apps/web/public/vendor/react.production.min.js', import.meta.url), 'utf8');
+const reactDom = await readFile(new URL('../apps/web/public/vendor/react-dom.production.min.js', import.meta.url), 'utf8');
 
 test('portable UI uses locally vendored React 18 and createRoot', () => {
   assert.match(react, /18\.3\.1/);
@@ -87,10 +88,11 @@ test('low-level telemetry stays out of the central conversation column', () => {
 });
 
 test('current release metadata advances without regressing focused workspace UI', () => {
-  assert.ok(server.includes("const VERSION = '0.13.0'"));
-  assert.ok(server.includes("SPEECH_ENGINE_RELIABILITY_CANDIDATE"));
+  assert.ok(server.includes('const VERSION = runtimeConfig.version'));
+  assert.ok(runtimeConfig.includes("join(root, 'VERSION')"));
+  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
   assert.ok(app.includes('focused-workspace'));
-  assert.ok(html.includes('Auralis v0.13.0'));
+  assert.ok(html.includes('Auralis v0.14.1'));
 });
 
 
@@ -103,7 +105,8 @@ test('Z hotkey answers selected or latest eligible turn and never fires while ty
 });
 
 test('eligible answers are prepared in background and selection only displays stored result', () => {
-  assert.ok(server.includes('queueMicrotask(()=>persistAutoAnswer(turn)'));
+  assert.ok(server.includes('runBackground(`answer.manual:${turn.id}`'));
+  assert.ok(server.includes('runBackground(`answer.auto:${turn.id}`'));
   assert.ok(server.includes("brainRuntime.autoAnswer"));
   assert.ok(app.includes("turn.answer_text?'پاسخ آماده':autoExpected?'در حال آماده‌سازی':'دستی'"));
   assert.ok(app.includes('inspectorPinned:false'));

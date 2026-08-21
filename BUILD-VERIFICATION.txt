@@ -1,75 +1,57 @@
-AURALIS v0.13.0 — BUILD VERIFICATION
+AURALIS v0.14.0 — BUILD VERIFICATION
 ====================================
-Release class: SPEECH_ENGINE_RELIABILITY_CANDIDATE
-Build target: Source + Windows x64 Portable
+Release class: INTELLIGENCE_LAYER_CANDIDATE
+Build target: Intelligence Layer source
 
-DELIVERED IN v0.13
+DELIVERED IN v0.14
 ------------------
-- Monotonic transcript protocol contracts: PARTIAL / STABLE / FINAL.
-- Durable transcript_stream_events ledger with unique fingerprint dedupe.
-- Canonical FINAL ownership: stream FINAL is persisted but Live Transcript FINAL is emitted once.
-- Optional whisper.cpp local ASR fallback over loopback HTTP only.
-- SSRF guard for local ASR endpoints in JavaScript and Rust contracts.
-- Neural-VAD hysteresis/boundary contracts in JavaScript and Rust.
-- Rust speech/VAD contracts + SQLite speech-engine migration v6.
-- Cloud -> local fallback events/status and Settings controls.
-- v0.12 capture-first WASAPI/spool/ledger regressions preserved.
-- Existing Focused Workspace UI preserved; no redesign.
+- Persisted intent, confidence, ambiguity, continuation parent and context per Turn.
+- Deterministic offset-preserving chunks with overlap, token counts and SHA-256.
+- Active/superseded/deleted source lineage and content deduplication.
+- FTS5 candidate generation plus deterministic hybrid rerank/document diversity.
+- Durable retrieval run/hit provenance.
+- Strict v2 exact-quote citations and durable citation audits.
+- Persian/adversarial citation and retrieval benchmarks.
+- Intelligence/citation visibility in the existing focused UI.
+- v0.12/v0.13 capture-first and speech reliability behavior preserved.
 
 SOURCE SOFTWARE VERIFICATION
 ----------------------------
-Environment used for this package build:
+Environment:
 - Linux build container
-- Node v22.16.0
-- npm 10.9.2
+- Node v24.19.0
+- npm 11.9.0
 
 Results:
+- clean `npm ci --offline`: PASS
 - JavaScript syntax checks: PASS
-- npm test: 102 total / 91 PASS / 0 FAIL / 11 SKIP
-- npm run frontend:typecheck: PASS
-- npm run frontend:build: PASS
-- npm run verify: PASS (AURALIS_VERIFY_PASS)
+- full Node tests: 115 total / 104 PASS / 0 FAIL / 11 SKIP
+- citation benchmark: 3/3 PASS; precision 1.00; quote coverage 1.00
+- deterministic retrieval benchmark: PASS
+- TypeScript strict type-check: PASS
+- web build: PASS
+- repeated web-build byte comparison: PASS (10/10 files identical)
+- consolidated verify: PASS (`AURALIS_VERIFY_PASS`)
 
-Source skips are expected package-context/native-probe checks; they are not failures.
+The 11 skips are package-context native-probe checks whose compiled probe is
+verified only in the Portable/Windows package; they are not failing assertions.
 
-PORTABLE SOFTWARE VERIFICATION
-------------------------------
-- JavaScript syntax checks: PASS
-- npm test: 102 total / 92 PASS / 0 FAIL / 10 SKIP
-- npm run frontend:typecheck: PASS
-- npm run frontend:build: PASS
-- npm run verify: PASS (AURALIS_VERIFY_PASS)
-- Bundled bun.exe: PE32+ Windows x86-64
-- Bundled auralis-capture-probe.exe: PE32+ Windows x86-64
-- Bundled auralis-spool-inspect.exe: PE32+ Windows x86-64
-- Shared Source -> Portable files checked: 122; mismatch = 0 after release sync.
-
-DEPENDENCY / INSTALL NOTE
+DEPENDENCY / VERSION NOTE
 -------------------------
-The package-lock and workspace manifests are aligned at v0.13.0. A clean `npm ci`
-was not completed in this isolated build environment because the npm registry
-was unavailable and the local cache did not contain Vite 7.1.7. The release
-publish script intentionally runs `npm ci` on the user's networked Windows
-machine before it can commit or tag the release.
+The lockfile, npm workspaces, public UI metadata, VERSION, and Cargo package are
+aligned at 0.14.0. The shipped source archive excludes node_modules, dist,
+runtime data, logs, and credentials.
 
-NOT CLAIMED BY THIS BUILD ENVIRONMENT
--------------------------------------
-- Rust compile/clippy/test PASS: NOT RUN (cargo/rustc unavailable here).
-- Windows WASAPI hardware PASS: NOT RUN (requires real Windows devices).
-- Local whisper.cpp live Persian inference: NOT RUN (no local server/model here).
-- Silero ONNX inference in default product hot path: NOT IMPLEMENTED/PROMOTED yet.
-- True cloud gRPC PARTIAL streaming latency gate: NOT IMPLEMENTED/PROMOTED yet.
-- 120-minute final release soak: NOT RUN; remains later hardening gate.
+NOT CLAIMED IN THIS ENVIRONMENT
+-------------------------------
+- Bun runtime/database smoke test: NOT RUN (Bun unavailable in this container).
+- Rust format/Clippy/unit compile: NOT RUN (cargo/rustc unavailable).
+- Windows WASAPI hardware gates: NOT RUN (requires target Windows devices).
+- Silero ONNX default hot path and cloud gRPC partial latency: not promoted.
+- 120-minute final release soak: remains a later hardening gate.
 
 WINDOWS GATE
 ------------
-Run on the target Windows x64 machine:
-  1) RUN-V013-QUICK-GATE.cmd
-  2) BUILD-V013-RUST-CORE.cmd
-  3) RUN-V013-HARDWARE-GATE.cmd
-  4) RUN-V013-LOCAL-WHISPER-GATE.cmd   (when local whisper.cpp is running)
-  5) RUN-V013-20MIN-HARDWARE-GATE.cmd
-
-The experimental Rust product capture/speech bridge must remain gated until
-these Windows checks pass. Normal Portable use stays on the validated event-
-producing capture bridge inherited from the v0.12 audio contract.
+1. RUN-V014-QUICK-GATE.cmd
+2. Run the inherited v0.13 Rust build and microphone/loopback hardware gates.
+3. Promote the experimental Rust speech bridge only after those gates pass.

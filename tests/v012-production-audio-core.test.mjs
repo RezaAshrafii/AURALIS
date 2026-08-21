@@ -10,17 +10,18 @@ const spool=await readFile(new URL('../native/core/src/audio/spool.rs',import.me
 const repository=await readFile(new URL('../native/core/src/storage/repository.rs',import.meta.url),'utf8');
 const runner=await readFile(new URL('../native/core/src/bin/auralis-audio-test.rs',import.meta.url),'utf8');
 const server=await readFile(new URL('../server.mjs',import.meta.url),'utf8');
+const runtimeConfig=await readFile(new URL('../runtime/config.mjs',import.meta.url),'utf8');
 const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
 const version=(await readFile(new URL('../VERSION',import.meta.url),'utf8')).trim();
 const gate=await readFile(new URL('../scripts/run-v012-gate-suite.ps1',import.meta.url),'utf8');
 const verifier=await readFile(new URL('../scripts/verify-v012-capture-summary.ps1',import.meta.url),'utf8');
 const buildScript=await readFile(new URL('../scripts/build-v012-windows-test.ps1',import.meta.url),'utf8');
 
-test('v0.12 production audio foundation remains intact in the v0.13 release',()=>{
-  assert.equal(version,'0.13.0');
-  assert.equal(pkg.version,'0.13.0');
-  assert.match(cargo,/version = "0\.13\.0"/);
-  assert.ok(server.includes("SPEECH_ENGINE_RELIABILITY_CANDIDATE"));
+test('v0.12 production audio foundation remains intact in the v0.14 release',()=>{
+  assert.equal(version,'0.14.1');
+  assert.equal(pkg.version,'0.14.1');
+  assert.match(cargo,/version = "0\.14\.1"/);
+  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
 });
 
 test('Rust core uses direct Windows WASAPI and event-driven capture',()=>{
@@ -73,11 +74,12 @@ test('capture summary verifier rejects unknown gaps and queue loss',()=>{
   assert.ok(verifier.includes('GATE_RESULT=PASS'));
 });
 
-test('Rust speech bridge remains gated away from default interactive capture until Windows v0.13 gate passes',()=>{
-  assert.ok(server.includes("AURALIS_EXPERIMENTAL_V013_CAPTURE === '1'"));
+test('packaged v0.14 product bridge is default while hardware-only v0.13 artifacts remain gated',()=>{
+  assert.ok(runtimeConfig.includes("AURALIS_EXPERIMENTAL_V013_CAPTURE === '1'"));
   const start=server.indexOf('async function nativeExecutable()');
   const end=server.indexOf('async function startNativeCapture',start);
   const block=server.slice(start,end);
+  assert.ok(block.indexOf('V014_NATIVE_CANDIDATES') < block.indexOf('ENABLE_EXPERIMENTAL_V013_PRODUCT_CAPTURE'));
   assert.ok(block.includes('ENABLE_EXPERIMENTAL_V013_PRODUCT_CAPTURE'));
   assert.ok(block.includes('LEGACY_NATIVE_PROBE'));
 });

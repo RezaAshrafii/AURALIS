@@ -5,8 +5,8 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8');
-const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
-const html = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
+const app = await readFile(new URL('../apps/web/public/app-react.js', import.meta.url), 'utf8');
+const html = await readFile(new URL('../apps/web/public/index.html', import.meta.url), 'utf8');
 const goUrl = new URL('../native-probe/main.go', import.meta.url);
 const vadUrl = new URL('../native-probe/vad.go', import.meta.url);
 const audioFormatUrl = new URL('../native-probe/audio_format.go', import.meta.url);

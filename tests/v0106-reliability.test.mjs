@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { shouldAutoAnswerTurn, isRuntimeCapabilityQuestion } from '../core/turn-policy.mjs';
 
 const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8');
-const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
-const kit = await readFile(new URL('../app/ui-kit.js', import.meta.url), 'utf8');
+const app = await readFile(new URL('../apps/web/public/app-react.js', import.meta.url), 'utf8');
+const kit = await readFile(new URL('../apps/web/public/ui-kit.js', import.meta.url), 'utf8');
 const vadUrl = new URL('../native-probe/vad.go', import.meta.url);
 const hasProbeSource = existsSync(fileURLToPath(vadUrl));
 const vad = hasProbeSource ? await readFile(vadUrl, 'utf8') : '';

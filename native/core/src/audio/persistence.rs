@@ -4,13 +4,14 @@ use serde_json::json;
 
 use crate::domain::{
     audio_frame::{ChannelId, SessionId},
-    ledger::{Gap, GapReason, GapStatus},
+    ledger::{AudioChunk, Gap, GapReason, GapStatus},
     ports::{AudioLedgerPort, AudioSpoolPort, CapturedFrame, CoreError, SpoolAppendResult},
 };
 
 use super::{handoff::CaptureQueueReceiver, spool::gap_reason};
 
 type TimestampSource = Arc<dyn Fn() -> String + Send + Sync>;
+pub type ChunkCommitObserver = Arc<dyn Fn(&AudioChunk) + Send + Sync>;
 
 #[derive(Debug, Clone)]
 pub struct PersistenceCursor {
@@ -34,6 +35,7 @@ pub struct CapturePersistenceWorker<L, S> {
     expected_device_position: Option<u64>,
     gap_counter: u64,
     timestamp_source: TimestampSource,
+    chunk_commit_observer: Option<ChunkCommitObserver>,
 }
 
 impl<L: AudioLedgerPort, S: AudioSpoolPort> CapturePersistenceWorker<L, S> {
@@ -54,7 +56,18 @@ impl<L: AudioLedgerPort, S: AudioSpoolPort> CapturePersistenceWorker<L, S> {
             expected_device_position: cursor.initial_device_position,
             gap_counter: 0,
             timestamp_source,
+            chunk_commit_observer: None,
         }
+    }
+
+    /// Adds a post-commit observer for product-facing event delivery.
+    ///
+    /// The observer is invoked only after the raw file is finalized and the
+    /// durable native ledger accepts the chunk. It is never called from the
+    /// WASAPI callback or before recovery metadata is committed.
+    pub fn with_chunk_commit_observer(mut self, observer: ChunkCommitObserver) -> Self {
+        self.chunk_commit_observer = Some(observer);
+        self
     }
 
     pub fn expected_sequence(&self) -> u64 {
@@ -150,6 +163,7 @@ impl<L: AudioLedgerPort, S: AudioSpoolPort> CapturePersistenceWorker<L, S> {
                             CoreError::Spool("ready chunk disappeared before finalize".into())
                         })?;
                 self.ledger.commit_chunk(&finalized, None)?;
+                self.notify_chunk_committed(&finalized);
             }
         }
 
@@ -207,8 +221,15 @@ impl<L: AudioLedgerPort, S: AudioSpoolPort> CapturePersistenceWorker<L, S> {
     fn finalize_open_chunk(&mut self) -> Result<(), CoreError> {
         if let Some(chunk) = self.spool.finalize_channel(&self.channel_id)? {
             self.ledger.commit_chunk(&chunk, None)?;
+            self.notify_chunk_committed(&chunk);
         }
         Ok(())
+    }
+
+    fn notify_chunk_committed(&self, chunk: &AudioChunk) {
+        if let Some(observer) = self.chunk_commit_observer.as_ref() {
+            observer(chunk);
+        }
     }
 
     fn record_gap(
@@ -265,7 +286,10 @@ mod tests {
     use std::{
         fs,
         path::PathBuf,
-        sync::atomic::{AtomicU64, Ordering},
+        sync::{
+            Arc,
+            atomic::{AtomicU64, Ordering},
+        },
     };
 
     use crate::{
@@ -446,5 +470,24 @@ mod tests {
 
         assert_eq!(worker.ledger().counts().unwrap(), (1, 1, 2, 1));
         assert_eq!(worker.ledger().unknown_gap_count().unwrap(), 1);
+    }
+
+    #[test]
+    fn committed_chunk_observer_runs_only_after_durable_commit() {
+        let (_sender, worker, _root) = worker(4, 8);
+        let observed = Arc::new(AtomicU64::new(0));
+        let observed_for_callback = Arc::clone(&observed);
+        let mut worker = worker.with_chunk_commit_observer(Arc::new(move |chunk| {
+            assert_eq!(chunk.state, crate::domain::ledger::AudioChunkState::Finalized);
+            assert_eq!(chunk.sha256_hex.len(), 64);
+            observed_for_callback.fetch_add(1, Ordering::Relaxed);
+        }));
+
+        worker.process_frame(frame(0)).unwrap();
+        assert_eq!(observed.load(Ordering::Relaxed), 0);
+        worker.process_frame(frame(4)).unwrap();
+        assert_eq!(observed.load(Ordering::Relaxed), 1);
+        worker.finish().unwrap();
+        assert_eq!(observed.load(Ordering::Relaxed), 1);
     }
 }

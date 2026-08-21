@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { shouldAutoAnswerTurn } from '../core/turn-policy.mjs';
 
 const server = await readFile(new URL('../server.mjs', import.meta.url), 'utf8');
-const app = await readFile(new URL('../app/app-react.js', import.meta.url), 'utf8');
-const css = await readFile(new URL('../app/styles.css', import.meta.url), 'utf8');
+const app = await readFile(new URL('../apps/web/public/app-react.js', import.meta.url), 'utf8');
+const css = await readFile(new URL('../apps/web/public/styles.css', import.meta.url), 'utf8');
 
 test('Oral Copilot mic-only request is automatically answerable', () => {
   const turn={kind:'request',source_role:'user'};

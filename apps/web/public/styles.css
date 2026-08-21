@@ -425,3 +425,7 @@ html[data-theme="light"] .app-btn.state.primary{color:var(--primary)}
   .runtime-inline-alert{grid-template-columns:1fr;align-items:start}
   .runtime-inline-alert .app-btn{width:100%}
 }
+
+/* v0.14.0 — intelligence and verifiable citation details inside the locked inspector */
+.intelligence-strip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0;padding:8px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2);font-size:8.8px;color:var(--muted)}
+.citation-list{display:grid;gap:7px;margin-top:9px}.citation-quote{display:grid;gap:4px;margin:0;padding:8px 10px;border:1px solid color-mix(in srgb,var(--success) 28%,var(--border));border-inline-start:3px solid var(--success);border-radius:10px;background:color-mix(in srgb,var(--success) 5%,var(--surface-2))}.citation-quote strong{font-size:8.5px;color:var(--success)}.citation-quote span{font-size:9.5px;line-height:1.75;color:var(--text-soft)}

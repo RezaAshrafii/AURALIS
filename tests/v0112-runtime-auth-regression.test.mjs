@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { classifyGeminiHttpError, runtimeCredentialReady } from '../core/provider-errors.mjs';
 
 const server=await readFile(new URL('../server.mjs',import.meta.url),'utf8');
-const app=await readFile(new URL('../app/app-react.js',import.meta.url),'utf8');
-const css=await readFile(new URL('../app/styles.css',import.meta.url),'utf8');
+const runtimeConfig=await readFile(new URL('../runtime/config.mjs',import.meta.url),'utf8');
+const app=await readFile(new URL('../apps/web/public/app-react.js',import.meta.url),'utf8');
+const css=await readFile(new URL('../apps/web/public/styles.css',import.meta.url),'utf8');
 const version=(await readFile(new URL('../VERSION',import.meta.url),'utf8')).trim();
 
 test('Gemini authentication failures are actionable and do not masquerade as generic HTTP errors',()=>{
@@ -75,9 +76,10 @@ test('settings use page-level scrolling instead of independent nested card scrol
   assert.ok(css.includes('.settings-page .settings-layout>.surface{overflow:visible'));
 });
 
-test('runtime-auth hardening remains present after the v0.13 version bump',()=>{
-  assert.equal(version,'0.13.0');
-  assert.ok(server.includes("const VERSION = '0.13.0'"));
-  assert.ok(app.includes("v0.13.0 · Speech Engine Reliability"));
+test('runtime-auth hardening remains present after the v0.14.1 patch bump',()=>{
+  assert.equal(version,'0.14.1');
+  assert.ok(server.includes('const VERSION = runtimeConfig.version'));
+  assert.ok(runtimeConfig.includes("join(root, 'VERSION')"));
+  assert.ok(app.includes("v0.14.1 · Intelligence Layer"));
   assert.ok(server.includes('AUTH_REQUIRED'));
 });

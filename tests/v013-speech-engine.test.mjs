@@ -12,7 +12,7 @@ import {
 import { NeuralVadStateMachine, VadState } from '../core/vad-state.mjs';
 
 const server=await readFile(new URL('../server.mjs',import.meta.url),'utf8');
-const app=await readFile(new URL('../app/app-react.js',import.meta.url),'utf8');
+const app=await readFile(new URL('../apps/web/public/app-react.js',import.meta.url),'utf8');
 const rustAsr=await readFile(new URL('../native/core/src/asr/mod.rs',import.meta.url),'utf8');
 const rustVad=await readFile(new URL('../native/core/src/vad/mod.rs',import.meta.url),'utf8');
 const migration=await readFile(new URL('../native/core/src/storage/migrations/0006_speech_engine.sql',import.meta.url),'utf8');
@@ -25,14 +25,14 @@ const webPkg=JSON.parse(await readFile(new URL('../apps/web/package.json',import
 const contractsPkg=JSON.parse(await readFile(new URL('../packages/contracts/package.json',import.meta.url),'utf8'));
 const cargoLock=await readFile(new URL('../native/Cargo.lock',import.meta.url),'utf8');
 
-test('v0.13 release metadata identifies speech-engine reliability milestone',()=>{
-  assert.equal(version,'0.13.0');
-  assert.equal(pkg.version,'0.13.0');
-  assert.equal(webPkg.version,'0.13.0');
-  assert.equal(contractsPkg.version,'0.13.0');
-  assert.match(cargoLock,/name = "auralis-core"\nversion = "0\.13\.0"/);
-  assert.ok(server.includes("SPEECH_ENGINE_RELIABILITY_CANDIDATE"));
-  assert.ok(app.includes('v0.13.0 · Speech Engine Reliability'));
+test('v0.13 speech reliability remains intact in the v0.14 intelligence release',()=>{
+  assert.equal(version,'0.14.1');
+  assert.equal(pkg.version,'0.14.1');
+  assert.equal(webPkg.version,'0.14.1');
+  assert.equal(contractsPkg.version,'0.14.1');
+  assert.match(cargoLock,/name = "auralis-core"\nversion = "0\.14\.1"/);
+  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
+  assert.ok(app.includes('v0.14.1 · Intelligence Layer'));
 });
 
 test('transcript accumulator enforces PARTIAL -> STABLE -> FINAL revision ownership',()=>{
@@ -120,8 +120,8 @@ test('shared contracts expose STABLE stream state without corrupting canonical f
   assert.ok(runtimeStore.includes('Streaming revisions are transient/protocol events'));
 });
 
-test('text-only Brain identifies the current release contract',()=>{
-  assert.ok(server.includes('You are Auralis v0.13.0 Text-only Brain.'));
+test('Brain identifies the current intelligence-layer contract',()=>{
+  assert.ok(server.includes('You are Auralis v0.14.1 Intelligence Layer.'));
   assert.ok(!server.includes('You are Auralis v0.12.0 Text-only Brain.'));
 });
 
