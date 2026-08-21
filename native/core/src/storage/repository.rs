@@ -16,10 +16,10 @@ use crate::domain::{
 
 use super::{
     AUDIO_LEDGER_MIGRATION_0001, LIFECYCLE_MIGRATION_0003, RAW_SPOOL_MIGRATION_0004,
-    RECOVERY_MIGRATION_0005, SEGMENT_ASR_MIGRATION_0002,
+    RECOVERY_MIGRATION_0005, SEGMENT_ASR_MIGRATION_0002, SPEECH_ENGINE_MIGRATION_0006,
 };
 
-const SCHEMA_VERSION: u32 = 5;
+const SCHEMA_VERSION: u32 = 6;
 type ChannelResumeCursor = (u64, Option<u64>, Option<u64>);
 type RegisteredChannelRow = (String, i64, i64, i64, Option<i64>, String, i64, i64, i64);
 
@@ -92,6 +92,7 @@ impl LedgerRepository {
             (3_u32, LIFECYCLE_MIGRATION_0003),
             (4_u32, RAW_SPOOL_MIGRATION_0004),
             (5_u32, RECOVERY_MIGRATION_0005),
+            (6_u32, SPEECH_ENGINE_MIGRATION_0006),
         ];
         for (version, sql) in migrations {
             if version <= current {
@@ -1252,7 +1253,7 @@ mod tests {
             id: SessionId(1),
             started_at_utc: "2026-08-14T00:00:00Z".into(),
             ended_at_utc: None,
-            app_version: "0.12.0-test".into(),
+            app_version: "0.13.0-test".into(),
             schema_version: SCHEMA_VERSION,
             capture_state: CaptureState::Starting,
             recovery_state: RecoveryState::Clean,

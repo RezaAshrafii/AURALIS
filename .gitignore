@@ -1,0 +1,24 @@
+# dependencies / deterministic build output
+node_modules/
+dist/
+
+# local runtime state
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Rust build output
+native/target/
+target/
+
+# logs / local diagnostics
+*.log
+hardware-results/
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

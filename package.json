@@ -1,6 +1,6 @@
 {
   "name": "auralis-source-foundation",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -17,6 +17,9 @@
     "build:v0.12:windows-test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v012-windows-test.ps1",
     "audio-core:fmt": "cargo fmt --manifest-path native/Cargo.toml --all -- --check",
     "audio-core:clippy": "cargo clippy --manifest-path native/Cargo.toml --workspace --all-targets --locked -- -D warnings",
-    "audio-core:test": "cargo test --manifest-path native/Cargo.toml --workspace --locked"
+    "audio-core:test": "cargo test --manifest-path native/Cargo.toml --workspace --locked",
+    "speech:test": "node --test \"tests/v013-speech-engine.test.mjs\"",
+    "speech:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v013-speech-gate.ps1",
+    "build:v0.13:windows-test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v013-windows-speech-test.ps1"
   }
 }

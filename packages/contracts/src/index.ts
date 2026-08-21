@@ -45,6 +45,20 @@ export interface TranscriptRevisionRecord {
   isFinal: boolean;
 }
 
+
+export type TranscriptStreamState = 'PARTIAL' | 'STABLE' | 'FINAL';
+
+export interface TranscriptStreamEventRecord {
+  segmentId: string;
+  sequence: number;
+  state: TranscriptStreamState;
+  provider: string;
+  providerModel: string;
+  text: string;
+  language: string;
+  confidence?: number | null;
+}
+
 export interface TurnRecord {
   id: string;
   sessionId: string;
@@ -104,7 +118,8 @@ export interface HealthSnapshot {
 }
 
 export type RuntimeEvent =
-  | { type: 'transcript.partial'; payload: TranscriptRevisionRecord }
+  | { type: 'transcript.partial'; payload: TranscriptStreamEventRecord }
+  | { type: 'transcript.stable'; payload: TranscriptStreamEventRecord }
   | { type: 'transcript.final'; payload: TranscriptRevisionRecord }
   | { type: 'turn.created'; payload: TurnRecord }
   | { type: 'answer.started'; payload: { turnId: string; jobId?: string } }

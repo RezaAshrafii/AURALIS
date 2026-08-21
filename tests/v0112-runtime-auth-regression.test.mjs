@@ -44,7 +44,7 @@ test('quick setup validates Gemini before enabling ASR and Brain',()=>{
 });
 
 test('authentication failure stops repeated automatic ASR attempts while preserving failed segments for replay',()=>{
-  assert.ok(server.includes("if(out.error==='AUTH_REQUIRED') asrRuntime.enabled=false;"));
+  assert.ok(server.includes("if(out.error==='AUTH_REQUIRED' && !cfg.localFallback?.enabled) asrRuntime.enabled=false;"));
   assert.ok(server.includes("s.state IN ('FROZEN','ASR_FAILED','TRANSCRIBED_EMPTY')"));
 });
 
@@ -75,9 +75,9 @@ test('settings use page-level scrolling instead of independent nested card scrol
   assert.ok(css.includes('.settings-page .settings-layout>.surface{overflow:visible'));
 });
 
-test('runtime-auth hardening remains present after the v0.12 version bump',()=>{
-  assert.equal(version,'0.12.0');
-  assert.ok(server.includes("const VERSION = '0.12.0'"));
-  assert.ok(app.includes("v0.12.0 · Production Audio Core"));
+test('runtime-auth hardening remains present after the v0.13 version bump',()=>{
+  assert.equal(version,'0.13.0');
+  assert.ok(server.includes("const VERSION = '0.13.0'"));
+  assert.ok(app.includes("v0.13.0 · Speech Engine Reliability"));
   assert.ok(server.includes('AUTH_REQUIRED'));
 });

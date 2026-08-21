@@ -3,3 +3,4 @@ pub mod audio;
 pub mod domain;
 pub mod health;
 pub mod storage;
+pub mod vad;

@@ -86,11 +86,11 @@ test('low-level telemetry stays out of the central conversation column', () => {
   assert.ok(app.includes('renderSystem(){'));
 });
 
-test('release metadata identifies v0.12 audio-core candidate while preserving focused workspace UI', () => {
-  assert.ok(server.includes("const VERSION = '0.12.0'"));
-  assert.ok(server.includes("PRODUCTION_AUDIO_CORE_CANDIDATE"));
+test('current release metadata advances without regressing focused workspace UI', () => {
+  assert.ok(server.includes("const VERSION = '0.13.0'"));
+  assert.ok(server.includes("SPEECH_ENGINE_RELIABILITY_CANDIDATE"));
   assert.ok(app.includes('focused-workspace'));
-  assert.ok(html.includes('Auralis v0.12.0'));
+  assert.ok(html.includes('Auralis v0.13.0'));
 });
 
 

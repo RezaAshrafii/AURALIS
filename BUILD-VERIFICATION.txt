@@ -1,89 +1,75 @@
-AURALIS v0.12.0 — BUILD VERIFICATION
+AURALIS v0.13.0 — BUILD VERIFICATION
 ====================================
+Release class: SPEECH_ENGINE_RELIABILITY_CANDIDATE
+Build target: Source + Windows x64 Portable
 
-Milestone:
-  Production Audio Core
+DELIVERED IN v0.13
+------------------
+- Monotonic transcript protocol contracts: PARTIAL / STABLE / FINAL.
+- Durable transcript_stream_events ledger with unique fingerprint dedupe.
+- Canonical FINAL ownership: stream FINAL is persisted but Live Transcript FINAL is emitted once.
+- Optional whisper.cpp local ASR fallback over loopback HTTP only.
+- SSRF guard for local ASR endpoints in JavaScript and Rust contracts.
+- Neural-VAD hysteresis/boundary contracts in JavaScript and Rust.
+- Rust speech/VAD contracts + SQLite speech-engine migration v6.
+- Cloud -> local fallback events/status and Settings controls.
+- v0.12 capture-first WASAPI/spool/ledger regressions preserved.
+- Existing Focused Workspace UI preserved; no redesign.
 
-Baseline:
-  v0.11.2 Runtime/Auth Stabilization
+SOURCE SOFTWARE VERIFICATION
+----------------------------
+Environment used for this package build:
+- Linux build container
+- Node v22.16.0
+- npm 10.9.2
 
-Implemented in source:
-  - Rust auralis-core v0.12.0
-  - direct Windows WASAPI capture contracts
-  - microphone + system loopback capture paths
-  - event-driven capture contract
-  - bounded capture handoff queue
-  - dropped-buffer / dropped-sample accounting
-  - append-only raw spool
-  - SHA-256 + sequence range integrity
-  - SQLite WAL audio ledger
-  - lifecycle / device interruption persistence
-  - crash/recovery scan and resume cursors
-  - real-Windows mic/loopback/both hardware-gate runner
-  - capture-summary verifier
-  - quick 60/60/120 second gate launcher
-  - 20-minute simultaneous-capture gate launcher
+Results:
+- JavaScript syntax checks: PASS
+- npm test: 102 total / 91 PASS / 0 FAIL / 11 SKIP
+- npm run frontend:typecheck: PASS
+- npm run frontend:build: PASS
+- npm run verify: PASS (AURALIS_VERIFY_PASS)
 
-Preserved deliberately:
-  - existing focused UI and interaction model
-  - current validated live transcript bridge
-  - Turn isolation / ownership
-  - Auto Answer + Hotkey Z
-  - RAG / citation validation
-  - Gemini credential preflight and actionable auth failures
+Source skips are expected package-context/native-probe checks; they are not failures.
 
-Important integration rule:
-  The Rust v0.12 hardware runner is NOT silently promoted into the interactive
-  Live Transcript path. v0.13 must add the production Neural-VAD / Streaming-ASR
-  event bridge before that migration. This prevents a native-core milestone from
-  regressing the working transcript/answer flow.
+PORTABLE SOFTWARE VERIFICATION
+------------------------------
+- JavaScript syntax checks: PASS
+- npm test: 102 total / 92 PASS / 0 FAIL / 10 SKIP
+- npm run frontend:typecheck: PASS
+- npm run frontend:build: PASS
+- npm run verify: PASS (AURALIS_VERIFY_PASS)
+- Bundled bun.exe: PE32+ Windows x86-64
+- Bundled auralis-capture-probe.exe: PE32+ Windows x86-64
+- Bundled auralis-spool-inspect.exe: PE32+ Windows x86-64
+- Shared Source -> Portable files checked: 122; mismatch = 0 after release sync.
 
-Executed in this environment:
-  Source Node regression suite:
-    tests   85
-    pass    74
-    fail    0
-    skipped 11
+DEPENDENCY / INSTALL NOTE
+-------------------------
+The package-lock and workspace manifests are aligned at v0.13.0. A clean `npm ci`
+was not completed in this isolated build environment because the npm registry
+was unavailable and the local cache did not contain Vite 7.1.7. The release
+publish script intentionally runs `npm ci` on the user's networked Windows
+machine before it can commit or tag the release.
 
-  Portable Node regression suite:
-    tests   85
-    pass    75
-    fail    0
-    skipped 10
+NOT CLAIMED BY THIS BUILD ENVIRONMENT
+-------------------------------------
+- Rust compile/clippy/test PASS: NOT RUN (cargo/rustc unavailable here).
+- Windows WASAPI hardware PASS: NOT RUN (requires real Windows devices).
+- Local whisper.cpp live Persian inference: NOT RUN (no local server/model here).
+- Silero ONNX inference in default product hot path: NOT IMPLEMENTED/PROMOTED yet.
+- True cloud gRPC PARTIAL streaming latency gate: NOT IMPLEMENTED/PROMOTED yet.
+- 120-minute final release soak: NOT RUN; remains later hardening gate.
 
-  npm run verify:             PASS (AURALIS_VERIFY_PASS)
-  frontend TypeScript check: PASS
-  frontend deterministic build: PASS
-  server.mjs syntax:         PASS
-  app-react.js syntax:       PASS
-  provider-errors.mjs syntax: PASS
+WINDOWS GATE
+------------
+Run on the target Windows x64 machine:
+  1) RUN-V013-QUICK-GATE.cmd
+  2) BUILD-V013-RUST-CORE.cmd
+  3) RUN-V013-HARDWARE-GATE.cmd
+  4) RUN-V013-LOCAL-WHISPER-GATE.cmd   (when local whisper.cpp is running)
+  5) RUN-V013-20MIN-HARDWARE-GATE.cmd
 
-  Source <-> Portable common-file comparison:
-    shared files: 94
-    mismatches:   0
-
-  Windows binaries already shipped in Portable:
-    runtime/bun.exe                  PE32+ x86-64
-    native/auralis-capture-probe.exe PE32+ x86-64
-    native/auralis-spool-inspect.exe PE32+ x86-64
-
-NOT executed / NOT claimed:
-  - cargo fmt / clippy / cargo test
-  - Rust Windows release build
-  - real microphone capture through Rust core
-  - real system-loopback capture through Rust core
-  - 20-minute Windows hardware gate
-  - 120-minute release soak
-
-Reason:
-  This build environment has no rustc/cargo and is not a real Windows audio host.
-
-Required Windows validation:
-  1) BUILD-V012-RUST-CORE.cmd
-  2) RUN-V012-QUICK-HARDWARE-GATE.cmd
-  3) RUN-V012-20MIN-HARDWARE-GATE.cmd
-
-Promotion criterion:
-  v0.12 hardware PASS may only be claimed after the real-Windows summaries show
-  durable sequences > 0, dropped samples/buffers = 0 and unknown gaps = 0 for the
-  required uninterrupted acceptance runs.
+The experimental Rust product capture/speech bridge must remain gated until
+these Windows checks pass. Normal Portable use stays on the validated event-
+producing capture bridge inherited from the v0.12 audio contract.

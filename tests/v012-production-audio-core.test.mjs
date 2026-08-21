@@ -16,11 +16,11 @@ const gate=await readFile(new URL('../scripts/run-v012-gate-suite.ps1',import.me
 const verifier=await readFile(new URL('../scripts/verify-v012-capture-summary.ps1',import.meta.url),'utf8');
 const buildScript=await readFile(new URL('../scripts/build-v012-windows-test.ps1',import.meta.url),'utf8');
 
-test('v0.12 release metadata and Rust crate identify production audio milestone',()=>{
-  assert.equal(version,'0.12.0');
-  assert.equal(pkg.version,'0.12.0');
-  assert.match(cargo,/version = "0\.12\.0"/);
-  assert.ok(server.includes("PRODUCTION_AUDIO_CORE_CANDIDATE"));
+test('v0.12 production audio foundation remains intact in the v0.13 release',()=>{
+  assert.equal(version,'0.13.0');
+  assert.equal(pkg.version,'0.13.0');
+  assert.match(cargo,/version = "0\.13\.0"/);
+  assert.ok(server.includes("SPEECH_ENGINE_RELIABILITY_CANDIDATE"));
 });
 
 test('Rust core uses direct Windows WASAPI and event-driven capture',()=>{
@@ -73,12 +73,12 @@ test('capture summary verifier rejects unknown gaps and queue loss',()=>{
   assert.ok(verifier.includes('GATE_RESULT=PASS'));
 });
 
-test('Rust hardware runner remains gated away from default interactive capture until v0.13 bridge',()=>{
-  assert.ok(server.includes("AURALIS_EXPERIMENTAL_V012_CAPTURE === '1'"));
+test('Rust speech bridge remains gated away from default interactive capture until Windows v0.13 gate passes',()=>{
+  assert.ok(server.includes("AURALIS_EXPERIMENTAL_V013_CAPTURE === '1'"));
   const start=server.indexOf('async function nativeExecutable()');
   const end=server.indexOf('async function startNativeCapture',start);
   const block=server.slice(start,end);
-  assert.ok(block.includes('ENABLE_EXPERIMENTAL_V012_PRODUCT_CAPTURE'));
+  assert.ok(block.includes('ENABLE_EXPERIMENTAL_V013_PRODUCT_CAPTURE'));
   assert.ok(block.includes('LEGACY_NATIVE_PROBE'));
 });
 

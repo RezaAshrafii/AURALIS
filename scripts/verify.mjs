@@ -4,9 +4,9 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT=resolve(fileURLToPath(new URL('..', import.meta.url)));
 const required=[
-  'server.mjs','VERSION','core/persian-router.mjs','core/answer-schema.mjs','core/turn-policy.mjs',
+  'server.mjs','VERSION','core/persian-router.mjs','core/answer-schema.mjs','core/turn-policy.mjs','core/speech-engine.mjs','core/vad-state.mjs',
   'app/app-react.js','app/styles.css','apps/web/tsconfig.json','packages/contracts/src/index.ts',
-  'native/core/src/audio/wasapi.rs','native/core/src/audio/spool.rs','native/core/src/audio/recovery.rs'
+  'native/core/src/audio/wasapi.rs','native/core/src/audio/spool.rs','native/core/src/audio/recovery.rs','native/core/src/asr/mod.rs','native/core/src/vad/mod.rs','native/core/src/storage/migrations/0006_speech_engine.sql'
 ];
 for(const f of required) await access(join(ROOT,f));
 const version=(await readFile(join(ROOT,'VERSION'),'utf8')).trim();
@@ -18,6 +18,8 @@ const commands=[
   ['node',['--check','server.mjs']],
   ['node',['--check','app/app-react.js']],
   ['node',['--check','app/ui-kit.js']],
+  ['node',['--check','core/speech-engine.mjs']],
+  ['node',['--check','core/vad-state.mjs']],
   ['node',['--test','tests/*.test.mjs']],
   ['tsc',['--project','apps/web/tsconfig.json','--noEmit']],
   ['node',['scripts/build-web.mjs']],
