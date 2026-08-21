@@ -1,4 +1,10 @@
-# Auralis current architecture — v0.12.0
+# Auralis current architecture
+
+نسخهٔ مرجع معماری و مرزهای اجرایی در فایل زیر نگهداری می‌شود:
+
+`docs/architecture/CURRENT_ARCHITECTURE.md`
+
+## سابقهٔ v0.12.0
 
 v0.12.0 milestone اصلی Production Windows Audio Core است.
 
