@@ -64,6 +64,6 @@ test('Windows build and hardware gate produce only the explicitly promoted bridg
   assert.ok(build.includes("dist\\v0.14-windows-product-bridge"));
   assert.ok(build.includes("auralis-audio-bridge.exe"));
   assert.ok(gate.includes("Non-JSON stdout violates jsonl-v1"));
-  assert.ok(gate.includes('Get-FileHash'));
+  assert.ok(gate.includes('[System.Security.Cryptography.SHA256]::Create()'));
   assert.ok(gate.includes('AURALIS_V014_PRODUCT_BRIDGE_GATE_PASS'));
 });

@@ -17,11 +17,11 @@ const gate=await readFile(new URL('../scripts/run-v012-gate-suite.ps1',import.me
 const verifier=await readFile(new URL('../scripts/verify-v012-capture-summary.ps1',import.meta.url),'utf8');
 const buildScript=await readFile(new URL('../scripts/build-v012-windows-test.ps1',import.meta.url),'utf8');
 
-test('v0.12 production audio foundation remains intact in the v0.14 release',()=>{
-  assert.equal(version,'0.14.1');
-  assert.equal(pkg.version,'0.14.1');
-  assert.match(cargo,/version = "0\.14\.1"/);
-  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
+test('v0.12 production audio foundation remains intact in the v0.16 release',()=>{
+  assert.equal(version,'0.16.0');
+  assert.equal(pkg.version,'0.16.0');
+  assert.match(cargo,/version = "0\.16\.0"/);
+  assert.ok(server.includes("PERSONAL_MEMORY_ENGINE_CANDIDATE"));
 });
 
 test('Rust core uses direct Windows WASAPI and event-driven capture',()=>{

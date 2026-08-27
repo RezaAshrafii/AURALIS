@@ -14,7 +14,10 @@ test('runtime config is version-owned, loopback-only, and validates the port', a
   assert.equal(config.version, '0.13.0');
   assert.equal(config.host, '127.0.0.1');
   assert.equal(config.port, 48000);
+  const testConfig = await loadRuntimeConfig(root, { NODE_ENV:'test', AURALIS_TEST_PROVIDER_URL:'http://127.0.0.1:47999/v1/chat/completions' });
+  assert.equal(testConfig.providerUrl, 'http://127.0.0.1:47999/v1/chat/completions');
   await assert.rejects(() => loadRuntimeConfig(root, { AURALIS_PORT: '80' }), /AURALIS_PORT/);
+  await assert.rejects(() => loadRuntimeConfig(root, { NODE_ENV:'test', AURALIS_TEST_PROVIDER_URL:'http://example.com/' }), /loopback/);
 });
 
 test('local request guard rejects cross-site bootstrap and uses authenticated state changes', () => {
@@ -48,7 +51,7 @@ test('JSON boundary rejects malformed, non-object, and oversized bodies', async 
 });
 
 test('static path boundary rejects traversal and malformed encoding', () => {
-  const root = '/tmp/auralis-static';
+  const root = join(tmpdir(), 'auralis-static');
   assert.equal(resolveStaticPath(root, '/'), join(root, 'index.html'));
   assert.equal(resolveStaticPath(root, '/../secret'), null);
   assert.throws(() => resolveStaticPath(root, '/%E0%A4%A'), /Malformed URL path encoding/);
@@ -62,4 +65,3 @@ test('task supervisor drains accepted background work and records failures', asy
   assert.deepEqual(errors, [['failure', 'boom']]);
   assert.equal(supervisor.run('late', async () => {}), false);
 });
-

@@ -15,7 +15,7 @@ test('only packaged v0.14 bridge is promoted; v0.13 target artifacts remain expl
 });
 
 test('source foundation scripts referenced by package.json exist as real first-class commands',()=>{
-  assert.equal(pkg.version,'0.14.1');
+  assert.equal(pkg.version,'0.16.0');
   assert.equal(pkg.scripts.verify,'node scripts/verify.mjs');
   assert.equal(pkg.scripts['frontend:typecheck'],'tsc --project apps/web/tsconfig.json --noEmit');
 });

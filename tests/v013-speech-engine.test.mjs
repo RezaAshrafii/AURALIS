@@ -25,14 +25,14 @@ const webPkg=JSON.parse(await readFile(new URL('../apps/web/package.json',import
 const contractsPkg=JSON.parse(await readFile(new URL('../packages/contracts/package.json',import.meta.url),'utf8'));
 const cargoLock=await readFile(new URL('../native/Cargo.lock',import.meta.url),'utf8');
 
-test('v0.13 speech reliability remains intact in the v0.14 intelligence release',()=>{
-  assert.equal(version,'0.14.1');
-  assert.equal(pkg.version,'0.14.1');
-  assert.equal(webPkg.version,'0.14.1');
-  assert.equal(contractsPkg.version,'0.14.1');
-  assert.match(cargoLock,/name = "auralis-core"\nversion = "0\.14\.1"/);
-  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
-  assert.ok(app.includes('v0.14.1 · Intelligence Layer'));
+test('v0.13 speech reliability remains intact in the v0.16 product release',()=>{
+  assert.equal(version,'0.16.0');
+  assert.equal(pkg.version,'0.16.0');
+  assert.equal(webPkg.version,'0.16.0');
+  assert.equal(contractsPkg.version,'0.16.0');
+  assert.match(cargoLock,/name = "auralis-core"\nversion = "0\.16\.0"/);
+  assert.ok(server.includes("PERSONAL_MEMORY_ENGINE_CANDIDATE"));
+  assert.ok(app.includes('v0.16.0 · Personal Memory Engine'));
 });
 
 test('transcript accumulator enforces PARTIAL -> STABLE -> FINAL revision ownership',()=>{
@@ -121,7 +121,7 @@ test('shared contracts expose STABLE stream state without corrupting canonical f
 });
 
 test('Brain identifies the current intelligence-layer contract',()=>{
-  assert.ok(server.includes('You are Auralis v0.14.1 Intelligence Layer.'));
+  assert.ok(server.includes('You are Auralis v0.16.0 Personal Memory Engine.'));
   assert.ok(!server.includes('You are Auralis v0.12.0 Text-only Brain.'));
 });
 

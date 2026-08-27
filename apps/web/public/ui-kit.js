@@ -11,7 +11,11 @@
   ];
 
   var NAV_ITEMS=[
-    {value:'session',label:'جلسه',caption:'Live'},
+    {value:'dashboard',label:'داشبورد',caption:'Dashboard'},
+    {value:'session',label:'مکالمات',caption:'Conversation Hub'},
+    {value:'workspaces',label:'پروژه‌ها و افراد',caption:'Workspace'},
+    {value:'actions',label:'اقدامات',caption:'Action Center'},
+    {value:'memory',label:'حافظه',caption:'Memory Center'},
     {value:'sources',label:'منابع',caption:'Grounding'},
     {value:'settings',label:'تنظیمات',caption:'Control'},
     {value:'system',label:'وضعیت سیستم',caption:'Health'}
@@ -62,7 +66,7 @@
   function Chip(props){return h('span',{className:'app-chip '+(props.tone||'neutral')+(props.active?' active':'')},props.dot?h(StatusDot,{active:props.active,tone:props.tone}):null,h('span',null,text(props.children,'')));}
   function Button(props){
     var c='app-btn '+(props.variant||'soft')+' '+(props.tone||'neutral')+(props.active?' is-active':'')+(props.loading?' is-loading':'')+(props.className?' '+props.className:'');
-    return h('button',{type:'button',className:c,disabled:Boolean(props.disabled||props.loading),onClick:props.onClick,title:props.title,'aria-pressed':props.active===undefined?undefined:Boolean(props.active)},props.loading?h('span',{className:'spinner-dot','aria-hidden':'true'}):null,h('span',null,text(props.children,'')));
+    return h('button',{type:props.type||'button',className:c,disabled:Boolean(props.disabled||props.loading),onClick:props.onClick,title:props.title,'aria-pressed':props.active===undefined?undefined:Boolean(props.active)},props.loading?h('span',{className:'spinner-dot','aria-hidden':'true'}):null,h('span',null,text(props.children,'')));
   }
   function ToggleButton(props){return h('button',{type:'button',className:'toggle-btn'+(props.active?' active':''),onClick:props.onClick,disabled:Boolean(props.disabled),'aria-pressed':Boolean(props.active)},h(StatusDot,{active:props.active,tone:props.active?'primary':'neutral'}),h('span',null,text(props.label,'')),props.detail?h('small',null,text(props.detail,'')):null);}
   function Surface(props){return h(props.as||'section',{className:'surface '+(props.className||'')},props.children);}

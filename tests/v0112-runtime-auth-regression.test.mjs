@@ -76,10 +76,10 @@ test('settings use page-level scrolling instead of independent nested card scrol
   assert.ok(css.includes('.settings-page .settings-layout>.surface{overflow:visible'));
 });
 
-test('runtime-auth hardening remains present after the v0.14.1 patch bump',()=>{
-  assert.equal(version,'0.14.1');
+test('runtime-auth hardening remains present in v0.16.0',()=>{
+  assert.equal(version,'0.16.0');
   assert.ok(server.includes('const VERSION = runtimeConfig.version'));
   assert.ok(runtimeConfig.includes("join(root, 'VERSION')"));
-  assert.ok(app.includes("v0.14.1 · Intelligence Layer"));
+  assert.ok(app.includes("v0.16.0 · Personal Memory Engine"));
   assert.ok(server.includes('AUTH_REQUIRED'));
 });

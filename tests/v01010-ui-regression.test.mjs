@@ -90,9 +90,9 @@ test('low-level telemetry stays out of the central conversation column', () => {
 test('current release metadata advances without regressing focused workspace UI', () => {
   assert.ok(server.includes('const VERSION = runtimeConfig.version'));
   assert.ok(runtimeConfig.includes("join(root, 'VERSION')"));
-  assert.ok(server.includes("INTELLIGENCE_LAYER_CANDIDATE"));
+  assert.ok(server.includes("PERSONAL_MEMORY_ENGINE_CANDIDATE"));
   assert.ok(app.includes('focused-workspace'));
-  assert.ok(html.includes('Auralis v0.14.1'));
+  assert.ok(html.includes('Auralis v0.16.0'));
 });
 
 

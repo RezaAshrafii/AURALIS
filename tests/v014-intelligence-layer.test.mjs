@@ -85,14 +85,14 @@ test('v0.14 server persists intelligence, retrieval provenance, source lineage, 
   assert.ok(server.includes("UPDATE source_documents SET status='DELETED'"));
   assert.ok(server.includes('persistAnswerResult({answerId'));
   assert.ok(server.includes('backfillTurnIntelligence();'));
-  assert.ok(server.includes("releaseClass: 'INTELLIGENCE_LAYER_CANDIDATE'"));
+  assert.ok(server.includes("releaseClass: 'PERSONAL_MEMORY_ENGINE_CANDIDATE'"));
 });
 
 test('v0.14 contracts and locked inspector expose intelligence and exact citations',()=>{
   assert.ok(contracts.includes('interface TurnIntelligenceRecord'));
   assert.ok(contracts.includes('interface RetrievalRunRecord'));
   assert.ok(contracts.includes("'grounding_unverified'"));
-  assert.ok(app.includes("v0.14.1 · Intelligence Layer"));
+  assert.ok(app.includes("v0.16.0 · Personal Memory Engine"));
   assert.ok(app.includes("className:'intelligence-strip'"));
   assert.ok(app.includes("className:'citation-quote'"));
 });
