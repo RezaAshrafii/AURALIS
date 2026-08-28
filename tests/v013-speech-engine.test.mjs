@@ -30,7 +30,7 @@ test('v0.13 speech reliability remains intact in the v0.16 product release',()=>
   assert.equal(pkg.version,'0.16.0');
   assert.equal(webPkg.version,'0.16.0');
   assert.equal(contractsPkg.version,'0.16.0');
-  assert.match(cargoLock,/name = "auralis-core"\nversion = "0\.16\.0"/);
+  assert.match(cargoLock,/name = "auralis-core"[\r\n]+version = "0\.16\.0"/);
   assert.ok(server.includes("PERSONAL_MEMORY_ENGINE_CANDIDATE"));
   assert.ok(app.includes('v0.16.0 · Personal Memory Engine'));
 });

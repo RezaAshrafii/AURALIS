@@ -51,7 +51,7 @@ foreach ($event in $chunks) {
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Chunk file is missing: $path" }
   $item = Get-Item -LiteralPath $path
   if ([int64]$payload.byte_length -ne $item.Length) { throw "Chunk byte length mismatch: $path" }
-  $sha = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+  $sha = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($path)) | ForEach-Object { "{0:x2}" -f   $sha = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() } -join ""
   if ($sha -ne ([string]$payload.sha256).ToLowerInvariant()) { throw "Chunk SHA-256 mismatch: $path" }
   if ([string]::IsNullOrWhiteSpace([string]$payload.sample_format)) { throw 'Chunk sample_format is missing.' }
 }
