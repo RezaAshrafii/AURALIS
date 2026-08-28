@@ -1239,6 +1239,12 @@ class MemoryCommands extends MemoryCommandPort {
             "UPDATE memory_evidence SET exact_quote='[purged]',evidence_hash=? WHERE memory_revision_id IN (SELECT id FROM memory_revisions WHERE memory_id=?)"
           )
           .run(sha("[purged]"), item.id);
+        // Also purge any evidence that might reference turns/segments directly without revision link
+        this.db
+          .query(
+            "UPDATE memory_evidence SET exact_quote='[purged]',evidence_hash=? WHERE turn_id IN (SELECT id FROM turns WHERE session_id IN (SELECT id FROM sessions WHERE id IN (SELECT capture_session_id FROM conversations WHERE workspace_id=?))) AND exact_quote != '[purged]'"
+          )
+          .run(sha("[purged]"), job.workspace_id);
         // 3. Purge memory_index
         this.db.query("DELETE FROM memory_index WHERE memory_id=?").run(item.id);
       }
