@@ -57,8 +57,13 @@ pub trait VadProbabilityPort: Send {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VadBoundary {
-    SpeechStarted { pre_roll_ms: u32 },
-    SpeechEnded { reason: VadEndpointReason, post_roll_ms: u32 },
+    SpeechStarted {
+        pre_roll_ms: u32,
+    },
+    SpeechEnded {
+        reason: VadEndpointReason,
+        post_roll_ms: u32,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

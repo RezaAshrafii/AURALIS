@@ -6,7 +6,7 @@ export function createTaskSupervisor({ onError }) {
     if (!accepting) return false;
     const promise = Promise.resolve()
       .then(task)
-      .catch(error => onError(error, label))
+      .catch((error) => onError(error, label))
       .finally(() => inFlight.delete(promise));
     inFlight.add(promise);
     return true;
@@ -16,7 +16,7 @@ export function createTaskSupervisor({ onError }) {
     accepting = false;
     if (inFlight.size === 0) return true;
     let timer;
-    const timeout = new Promise(resolve => {
+    const timeout = new Promise((resolve) => {
       timer = setTimeout(() => resolve(false), timeoutMs);
       timer.unref?.();
     });

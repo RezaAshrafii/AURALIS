@@ -1,4 +1,4 @@
-export const VadState = Object.freeze({ SILENCE: 'SILENCE', SPEECH: 'SPEECH' });
+export const VadState = Object.freeze({ SILENCE: "SILENCE", SPEECH: "SPEECH" });
 
 export function validateVadConfig(input = {}) {
   const cfg = {
@@ -7,15 +7,18 @@ export function validateVadConfig(input = {}) {
     minSpeechMs: Number(input.minSpeechMs ?? 160),
     minSilenceMs: Number(input.minSilenceMs ?? 420),
     speechPadMs: Number(input.speechPadMs ?? 160),
-    maxSegmentMs: Number(input.maxSegmentMs ?? 30_000)
+    maxSegmentMs: Number(input.maxSegmentMs ?? 30_000),
   };
-  if (!(cfg.startThreshold > cfg.endThreshold && cfg.startThreshold <= 1 && cfg.endThreshold >= 0)) {
-    throw new TypeError('VAD thresholds require 0 <= end < start <= 1');
+  if (
+    !(cfg.startThreshold > cfg.endThreshold && cfg.startThreshold <= 1 && cfg.endThreshold >= 0)
+  ) {
+    throw new TypeError("VAD thresholds require 0 <= end < start <= 1");
   }
-  for (const key of ['minSpeechMs','minSilenceMs','speechPadMs','maxSegmentMs']) {
+  for (const key of ["minSpeechMs", "minSilenceMs", "speechPadMs", "maxSegmentMs"]) {
     if (!Number.isFinite(cfg[key]) || cfg[key] < 0) throw new TypeError(`invalid ${key}`);
   }
-  if (cfg.maxSegmentMs < cfg.minSpeechMs) throw new TypeError('maxSegmentMs must cover minSpeechMs');
+  if (cfg.maxSegmentMs < cfg.minSpeechMs)
+    throw new TypeError("maxSegmentMs must cover minSpeechMs");
   return Object.freeze(cfg);
 }
 
@@ -30,14 +33,22 @@ export class NeuralVadStateMachine {
   #candidateSilenceMs = 0;
   #segmentMs = 0;
 
-  constructor(config = {}) { this.#cfg = validateVadConfig(config); }
-  get state() { return this.#state; }
-  get config() { return this.#cfg; }
+  constructor(config = {}) {
+    this.#cfg = validateVadConfig(config);
+  }
+  get state() {
+    return this.#state;
+  }
+  get config() {
+    return this.#cfg;
+  }
 
   observe(probability, frameMs) {
-    const p = Number(probability), ms = Number(frameMs);
-    if (!Number.isFinite(p) || p < 0 || p > 1) throw new TypeError('VAD probability must be within [0,1]');
-    if (!Number.isFinite(ms) || ms <= 0) throw new TypeError('frameMs must be positive');
+    const p = Number(probability),
+      ms = Number(frameMs);
+    if (!Number.isFinite(p) || p < 0 || p > 1)
+      throw new TypeError("VAD probability must be within [0,1]");
+    if (!Number.isFinite(ms) || ms <= 0) throw new TypeError("frameMs must be positive");
     const events = [];
 
     if (this.#state === VadState.SILENCE) {
@@ -47,7 +58,7 @@ export class NeuralVadStateMachine {
         this.#state = VadState.SPEECH;
         this.#segmentMs = this.#candidateSpeechMs;
         this.#candidateSilenceMs = 0;
-        events.push({ type:'speech_started', preRollMs:this.#cfg.speechPadMs });
+        events.push({ type: "speech_started", preRollMs: this.#cfg.speechPadMs });
       }
       return events;
     }
@@ -57,12 +68,16 @@ export class NeuralVadStateMachine {
     else this.#candidateSilenceMs = 0;
 
     if (this.#segmentMs >= this.#cfg.maxSegmentMs) {
-      events.push({ type:'speech_ended', reason:'max_segment', postRollMs:this.#cfg.speechPadMs });
+      events.push({
+        type: "speech_ended",
+        reason: "max_segment",
+        postRollMs: this.#cfg.speechPadMs,
+      });
       this.reset();
       return events;
     }
     if (this.#candidateSilenceMs >= this.#cfg.minSilenceMs) {
-      events.push({ type:'speech_ended', reason:'silence', postRollMs:this.#cfg.speechPadMs });
+      events.push({ type: "speech_ended", reason: "silence", postRollMs: this.#cfg.speechPadMs });
       this.reset();
     }
     return events;

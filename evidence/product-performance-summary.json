@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "release": "0.15.0",
+  "command": "npm run v015:benchmark",
+  "fixture": {
+    "tasks": 10000,
+    "conversations": 5000,
+    "searchProjectionRows": 100000
+  },
+  "samples": 60,
+  "dashboardP95Ms": 6.243,
+  "dashboardBudgetMs": 300,
+  "searchP95Ms": 205.172,
+  "searchBudgetMs": 500,
+  "result": "PASS"
+}

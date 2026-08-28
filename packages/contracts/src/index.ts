@@ -1,8 +1,16 @@
-export type SessionMode = 'study' | 'oral_copilot' | 'meeting' | 'mock_oral_exam';
-export type SourceRole = 'user' | 'system' | 'manual' | 'auralis';
-export type TurnKind = 'question' | 'request' | 'statement' | 'answer';
+export type SessionMode = "study" | "oral_copilot" | "meeting" | "mock_oral_exam";
+export type SourceRole = "user" | "system" | "manual" | "auralis";
+export type TurnKind = "question" | "request" | "statement" | "answer";
 export type GroundingState = 'source' | 'mixed' | 'general' | 'insufficient' | 'runtime' | 'grounding_unverified';
-export type HealthState = 'UNKNOWN' | 'READY' | 'CAPTURING' | 'HEALTHY' | 'DEGRADED' | 'FAILED' | 'STOPPED' | 'DISABLED';
+export type HealthState =
+  | "UNKNOWN"
+  | "READY"
+  | "CAPTURING"
+  | "HEALTHY"
+  | "DEGRADED"
+  | "FAILED"
+  | "STOPPED"
+  | "DISABLED";
 
 export interface SessionRecord {
   id: string;
@@ -15,7 +23,7 @@ export interface SessionRecord {
 export interface AudioChannelRecord {
   id: string;
   sessionId: string;
-  sourceKind: 'microphone' | 'system-loopback' | 'process-loopback';
+  sourceKind: "microphone" | "system-loopback" | "process-loopback";
   sampleRate?: number | null;
   channels?: number | null;
   state: string;
@@ -44,7 +52,6 @@ export interface TranscriptRevisionRecord {
   language: string;
   isFinal: boolean;
 }
-
 
 export type TranscriptStreamState = 'PARTIAL' | 'STABLE' | 'FINAL';
 
@@ -159,7 +166,7 @@ export interface HealthComponent {
 }
 
 export interface HealthSnapshot {
-  product: 'Auralis' | string;
+  product: "Auralis" | string;
   version: string;
   status: HealthState | string;
   schemaVersion: number;
@@ -170,9 +177,9 @@ export type RuntimeEvent =
   | { type: 'transcript.partial'; payload: TranscriptStreamEventRecord }
   | { type: 'transcript.stable'; payload: TranscriptStreamEventRecord }
   | { type: 'transcript.final'; payload: TranscriptRevisionRecord }
-  | { type: 'turn.created'; payload: TurnRecord }
-  | { type: 'turn.intelligence'; payload: { turnId: string; intelligence: TurnIntelligenceRecord } }
-  | { type: 'answer.started'; payload: { turnId: string; jobId?: string } }
-  | { type: 'answer.final'; payload: AnswerRecord }
-  | { type: 'audio.gap'; payload: GapRecord }
-  | { type: 'health.changed'; payload: HealthSnapshot };
+  | { type: "turn.created"; payload: TurnRecord }
+  | { type: "turn.intelligence"; payload: { turnId: string; intelligence: TurnIntelligenceRecord } }
+  | { type: "answer.started"; payload: { turnId: string; jobId?: string } }
+  | { type: "answer.final"; payload: AnswerRecord }
+  | { type: "audio.gap"; payload: GapRecord }
+  | { type: "health.changed"; payload: HealthSnapshot };

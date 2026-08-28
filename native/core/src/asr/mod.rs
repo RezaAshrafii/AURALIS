@@ -103,7 +103,12 @@ impl LocalWhisperConfig {
         if !matches!(host.as_str(), "127.0.0.1" | "localhost" | "[::1]") {
             return Err("local whisper endpoint host must be loopback");
         }
-        if port.parse::<u16>().ok().filter(|value| *value > 0).is_none() {
+        if port
+            .parse::<u16>()
+            .ok()
+            .filter(|value| *value > 0)
+            .is_none()
+        {
             return Err("local whisper endpoint port is invalid");
         }
         if self.language.trim().is_empty() {

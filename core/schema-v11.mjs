@@ -1,8 +1,11 @@
-import { applySchemaV10 } from './schema-v10.mjs';
-import { nowIso } from './domain-models.mjs';
+import { nowIso } from "./domain-models.mjs";
+import { applySchemaV10 } from "./schema-v10.mjs";
 
 function hasColumn(db, table, column) {
-  return db.query(`PRAGMA table_info(${table})`).all().some(row => row.name === column);
+  return db
+    .query(`PRAGMA table_info(${table})`)
+    .all()
+    .some((row) => row.name === column);
 }
 
 export function applySchemaV11(db) {
@@ -220,18 +223,18 @@ export function applySchemaV11(db) {
     );
   `);
 
-  if (!hasColumn(db, 'answer_results', 'memory_context_json')) {
+  if (!hasColumn(db, "answer_results", "memory_context_json")) {
     db.exec("ALTER TABLE answer_results ADD COLUMN memory_context_json TEXT NOT NULL DEFAULT '[]'");
   }
-  if (!hasColumn(db, 'memory_settings', 'consent_granted_at')) {
-    db.exec('ALTER TABLE memory_settings ADD COLUMN consent_granted_at TEXT');
+  if (!hasColumn(db, "memory_settings", "consent_granted_at")) {
+    db.exec("ALTER TABLE memory_settings ADD COLUMN consent_granted_at TEXT");
   }
-  if (!hasColumn(db, 'memory_settings', 'disabled_at')) {
-    db.exec('ALTER TABLE memory_settings ADD COLUMN disabled_at TEXT');
+  if (!hasColumn(db, "memory_settings", "disabled_at")) {
+    db.exec("ALTER TABLE memory_settings ADD COLUMN disabled_at TEXT");
   }
 
   const now = nowIso();
-  const workspaces = db.query('SELECT id FROM workspaces').all();
+  const workspaces = db.query("SELECT id FROM workspaces").all();
   for (const workspace of workspaces) {
     db.query(`
       INSERT OR IGNORE INTO memory_settings (

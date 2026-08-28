@@ -1,4 +1,11 @@
-import type { AnswerRecord, HealthSnapshot, RuntimeEvent, TranscriptRevisionRecord, TurnIntelligenceRecord, TurnRecord } from '@auralis/contracts';
+import type {
+  AnswerRecord,
+  HealthSnapshot,
+  RuntimeEvent,
+  TranscriptRevisionRecord,
+  TurnIntelligenceRecord,
+  TurnRecord,
+} from "@auralis/contracts";
 
 export interface RuntimeState {
   health: HealthSnapshot | null;

@@ -1,4 +1,4 @@
-import { nowIso } from './domain-models.mjs';
+import { nowIso } from "./domain-models.mjs";
 
 export function applySchemaV10(db) {
   db.exec(`
@@ -221,31 +221,52 @@ export function applySchemaV10(db) {
 
   // Backfill Default Profile and Default Workspace idempotently
   const now = nowIso();
-  const existingProfile = db.query('SELECT id FROM local_profiles WHERE id = ?').get('default-profile');
+  const existingProfile = db
+    .query("SELECT id FROM local_profiles WHERE id = ?")
+    .get("default-profile");
   if (!existingProfile) {
     db.query(`
       INSERT INTO local_profiles (id, display_name, locale, timezone, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run('default-profile', 'کاربر پیش‌فرض', 'fa-IR', 'Asia/Tehran', now, now);
+    `).run("default-profile", "کاربر پیش‌فرض", "fa-IR", "Asia/Tehran", now, now);
   }
 
-  const existingWorkspace = db.query('SELECT id FROM workspaces WHERE id = ?').get('default-workspace');
+  const existingWorkspace = db
+    .query("SELECT id FROM workspaces WHERE id = ?")
+    .get("default-workspace");
   if (!existingWorkspace) {
     db.query(`
       INSERT INTO workspaces (id, local_profile_id, name, description, status, revision, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run('default-workspace', 'default-profile', 'فضای کاری اصلی', 'فضای کاری پیش‌فرض شخصی اورالیس', 'ACTIVE', 1, now, now);
+    `).run(
+      "default-workspace",
+      "default-profile",
+      "فضای کاری اصلی",
+      "فضای کاری پیش‌فرض شخصی اورالیس",
+      "ACTIVE",
+      1,
+      now,
+      now
+    );
   }
 
   // Idempotently convert existing sessions to conversations
-  const sessions = db.query('SELECT * FROM sessions').all();
+  const sessions = db.query("SELECT * FROM sessions").all();
   for (const session of sessions) {
-    const existingConv = db.query('SELECT id FROM conversations WHERE capture_session_id = ?').get(session.id);
+    const existingConv = db
+      .query("SELECT id FROM conversations WHERE capture_session_id = ?")
+      .get(session.id);
     if (!existingConv) {
       const convId = `conv-${session.id}`;
-      const kind = session.mode === 'meeting' ? 'MEETING' : (session.mode === 'oral_copilot' ? 'NOTE' : 'GENERAL');
-      const state = session.state === 'CAPTURING' ? 'LIVE' : (session.state === 'CLOSED' ? 'READY' : 'DRAFT');
-      const title = `مکالمه ${new Date(session.started_at).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' })}`;
+      const kind =
+        session.mode === "meeting"
+          ? "MEETING"
+          : session.mode === "oral_copilot"
+            ? "NOTE"
+            : "GENERAL";
+      const state =
+        session.state === "CAPTURING" ? "LIVE" : session.state === "CLOSED" ? "READY" : "DRAFT";
+      const title = `مکالمه ${new Date(session.started_at).toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" })}`;
       db.query(`
         INSERT INTO conversations (
           id, workspace_id, project_id, capture_session_id, title, goal, kind, state,
@@ -253,7 +274,7 @@ export function applySchemaV10(db) {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         convId,
-        'default-workspace',
+        "default-workspace",
         null,
         session.id,
         title,

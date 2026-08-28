@@ -478,7 +478,10 @@ mod tests {
         let observed = Arc::new(AtomicU64::new(0));
         let observed_for_callback = Arc::clone(&observed);
         let mut worker = worker.with_chunk_commit_observer(Arc::new(move |chunk| {
-            assert_eq!(chunk.state, crate::domain::ledger::AudioChunkState::Finalized);
+            assert_eq!(
+                chunk.state,
+                crate::domain::ledger::AudioChunkState::Finalized
+            );
             assert_eq!(chunk.sha256_hex.len(), 64);
             observed_for_callback.fetch_add(1, Ordering::Relaxed);
         }));

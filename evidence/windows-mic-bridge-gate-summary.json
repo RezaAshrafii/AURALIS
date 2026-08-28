@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "release": "0.15.0",
+  "executedAtUtc": "2026-08-23T15:08:00Z",
+  "command": "RUN-V014-PRODUCT-BRIDGE-GATE.cmd",
+  "automatedGate": "PASS",
+  "capture": {
+    "result": "CAPTURE_COMPLETE",
+    "mode": "mic",
+    "durationSeconds": 12.248,
+    "chunks": 5,
+    "events": 32,
+    "acceptedSamples": 577920,
+    "rawBytes": 4623360,
+    "droppedBuffers": 0,
+    "gaps": 0,
+    "unknownGaps": 0
+  },
+  "bridgeSha256": "256ae6d28f46b18eae13baec7c19ce8a3def3aeea0670752a29f4b4bc1ae87db",
+  "humanReviewRequiredByNativeSummary": true,
+  "rawAudioIncludedInRelease": false
+}

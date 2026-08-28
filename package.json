@@ -31,12 +31,15 @@
     "intelligence:gate": "npm run intelligence:test && npm run intelligence:benchmark && npm run frontend:typecheck && npm run frontend:build",
     "intelligence:gate:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v014-intelligence-gate.ps1",
     "speech:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v013-speech-gate.ps1",
-    "build:v0.13:windows-test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v013-windows-speech-test.ps1"
-    ,"build:v0.14:windows-bridge": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v014-windows-product-bridge.ps1"
-    ,"audio-bridge:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v014-product-bridge-gate.ps1"
-    ,"v015:test": "node --test tests/v015-product-experience.test.mjs"
-    ,"v015:benchmark": "node scripts/benchmark-v015-product.mjs"
-    ,"v016:test": "node --test tests/v016-memory-engine.test.mjs"
-    ,"v016:benchmark": "node scripts/benchmark-v016-memory.mjs"
+    "build:v0.13:windows-test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v013-windows-speech-test.ps1",
+    "build:v0.14:windows-bridge": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-v014-windows-product-bridge.ps1",
+    "audio-bridge:gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v014-product-bridge-gate.ps1",
+    "v015:test": "node --test tests/v015-product-experience.test.mjs",
+    "v015:benchmark": "node scripts/benchmark-v015-product.mjs",
+    "v016:test": "node --test tests/v016-memory-engine.test.mjs",
+    "v016:benchmark": "node scripts/benchmark-v016-memory.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.11"
   }
 }
